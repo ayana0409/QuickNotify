@@ -10,20 +10,20 @@ Sử dụng checklist này để theo dõi tiến độ phát triển hệ thố
 
 **Mục tiêu:** Thiết lập khung dự án Hexagonal và định nghĩa các đối tượng cốt lõi.
 
-* [ ] **Bước 1.1: Khởi tạo dự án Go**
-  * [ ] Khởi tạo module (`go mod init quicknotify`).
-  * [ ] Tạo cấu trúc thư mục chuẩn Hexagonal (`cmd/`, `internal/core/`, `internal/adapters/`, `configs/`).
-  * [ ] Cài đặt các thư viện cơ bản (`viper`, `zap`, `validator`).
+* [x] **Bước 1.1: Khởi tạo dự án Go**
+  * [x] Khởi tạo module (`go mod init quicknotify`).
+  * [x] Tạo cấu trúc thư mục chuẩn Hexagonal (`cmd/`, `internal/core/`, `internal/adapters/`, `configs/`).
+  * [x] Cài đặt các thư viện cơ bản (`viper`, `zap`, `validator`).
 
-* [ ] **Bước 1.2: Định nghĩa Domain Models**
-  * [ ] Tạo file `internal/core/domain/notification.go`.
-  * [ ] Định nghĩa struct `NotificationEnvelope` (EventID, ProjectID, Priority, Channels, Scope, Target, Content).
-  * [ ] Định nghĩa các hằng số Scope (`user`, `project_global`, `system_global`).
+* [x] **Bước 1.2: Định nghĩa Domain Models**
+  * [x] Tạo file `internal/core/domain/notification.go`.
+  * [x] Định nghĩa struct `NotificationEnvelope` (EventID, ProjectID, Priority, Channels, Scope, Target, Content).
+  * [x] Định nghĩa các hằng số Scope (`user`, `project_global`, `system_global`).
 
-* [ ] **Bước 1.3: Định nghĩa Interfaces (Ports)**
-  * [ ] Tạo file `internal/core/ports/dispatcher.go`.
-  * [ ] Định nghĩa interface `NotificationService` (hàm `ProcessEvent`).
-  * [ ] Định nghĩa các Outbound Ports (`WSPort`, `EmailPort`, v.v.).
+* [x] **Bước 1.3: Định nghĩa Interfaces (Ports)**
+  * [x] Tạo file `internal/core/ports/dispatcher.go`.
+  * [x] Định nghĩa interface `NotificationService` (hàm `ProcessEvent`).
+  * [x] Định nghĩa các Outbound Ports (`WSPort`, `EmailPort`, v.v.).
 
 ## Giai đoạn 2: Xây dựng Hệ thống WebSocket & Outbound (Outbound Adapters)
 
