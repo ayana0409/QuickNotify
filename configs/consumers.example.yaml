@@ -1,0 +1,47 @@
+# Multi-cluster Kafka Consumers and Topic-to-Translator Registry (Example Template)
+# Copy this file to configs/consumers.yaml for local development.
+# NOTE: This file manages independent Kafka clusters, external project brokers, and topic mapping.
+
+# 1. Define independent Kafka clusters and their respective broker nodes.
+# Each cluster can have multiple broker addresses for High Availability (HA).
+clusters:
+  # Main core cluster (used for standard global events)
+  - id: "cluster_main"
+    brokers:
+      - "kafka-core-1.internal:9092"
+      - "kafka-core-2.internal:9092"
+      - "kafka-core-3.internal:9092"
+
+  # Dedicated Kafka cluster operated by the QuickBite team
+  - id: "cluster_quickbite"
+    brokers:
+      - "kafka.quickbite.local:9092"
+
+  # Independent cluster for EduTrack / School management project
+  - id: "cluster_edutrack"
+    brokers:
+      - "10.0.2.15:9092"
+      - "10.0.2.16:9092"
+
+  # Example third-party or cloud managed Kafka cluster (e.g., Confluent Cloud / AWS MSK)
+  - id: "cluster_cloud"
+    brokers:
+      - "pkc-abc12.ap-southeast-1.aws.confluent.cloud:9092"
+
+# 2. Map topics to their source cluster and assigned translator.
+# QuickNotify will spawn an isolated consumer group worker for each entry.
+consumers:
+  # Standard core topic: uses 'direct' translator (1:1 mapping to NotificationEnvelope)
+  - topic: "global-notify-events"
+    cluster_id: "cluster_main"
+    translator: "direct"
+
+  # Legacy topic from QuickBite: maps old order payload into NotificationEnvelope
+  - topic: "quickbite-orders"
+    cluster_id: "cluster_quickbite"
+    translator: "quickbite_order"
+
+  # Topic from EduTrack: translates student exam grading events
+  - topic: "edutrack-exam-results"
+    cluster_id: "cluster_edutrack"
+    translator: "edutrack_exam"

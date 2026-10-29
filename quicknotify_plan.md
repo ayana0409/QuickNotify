@@ -29,31 +29,31 @@ Sử dụng checklist này để theo dõi tiến độ phát triển hệ thố
 
 **Mục tiêu:** Quản lý kết nối an toàn, phân luồng theo Project/User, hỗ trợ Multi-session và các kênh liên lạc khác.
 
-* [ ] **Bước 2.1: Thiết lập Hub Manager**
-  * [ ] Tạo file `internal/adapters/outbound/websocket/hub.go`.
-  * [ ] Cài đặt cấu trúc Map 3 cấp: `map[ProjectID]map[UserID]map[*Client]bool`.
-  * [ ] Xây dựng các method quản lý: `Register`, `Unregister`.
-  * [ ] Xây dựng method `Broadcast` xử lý logic định tuyến theo Scope (Targeted, Project Global, System Global).
+* [x] **Bước 2.1: Thiết lập Hub Manager**
+  * [x] Tạo file `internal/adapters/outbound/websocket/hub.go`.
+  * [x] Cài đặt cấu trúc Map 3 cấp: `map[ProjectID]map[UserID]map[*Client]bool`.
+  * [x] Xây dựng các method quản lý: `Register`, `Unregister`.
+  * [x] Xây dựng method `Broadcast` xử lý logic định tuyến theo Scope (Targeted, Project Global, System Global).
 
-* [ ] **Bước 2.2: Xây dựng Client Goroutines**
-  * [ ] Tạo file `internal/adapters/outbound/websocket/client.go` với `gorilla/websocket`.
-  * [ ] Viết logic vòng lặp `ReadPump` (lắng nghe pong/disconnect).
-  * [ ] Viết logic vòng lặp `WritePump` (đẩy dữ liệu xuống network).
-  * [ ] Áp dụng **Non-blocking send** (`select-default`) khi đẩy tin từ Hub vào channel của Client.
+* [x] **Bước 2.2: Xây dựng Client Goroutines**
+  * [x] Tạo file `internal/adapters/outbound/websocket/client.go` với `gorilla/websocket`.
+  * [x] Viết logic vòng lặp `ReadPump` (lắng nghe pong/disconnect).
+  * [x] Viết logic vòng lặp `WritePump` (đẩy dữ liệu xuống network).
+  * [x] Áp dụng **Non-blocking send** (`select-default`) khi đẩy tin từ Hub vào channel của Client.
 
-* [ ] **Bước 2.3: Viết Middleware Xác thực (Security)**
-  * [ ] Tạo file `internal/adapters/outbound/websocket/middleware.go`.
-  * [ ] Viết hàm parse và validate JWT Token.
-  * [ ] Trích xuất `project_id` và `user_id` từ Token claims và gán vào HTTP Context.
+* [x] **Bước 2.3: Viết Middleware Xác thực (Security)**
+  * [x] Tạo file `internal/adapters/outbound/websocket/middleware.go`.
+  * [x] Viết hàm parse và validate JWT Token.
+  * [x] Trích xuất `project_id` và `user_id` từ Token claims và gán vào HTTP Context.
 
-* [ ] **Bước 2.4: Mở Endpoint WebSocket**
-  * [ ] Tạo file `handler.go` để hứng route `/ws`.
-  * [ ] Upgrade HTTP request, khởi tạo `Client` với Context an toàn, và đăng ký vào Hub.
+* [x] **Bước 2.4: Mở Endpoint WebSocket**
+  * [x] Tạo file `handler.go` để hứng route `/ws`.
+  * [x] Upgrade HTTP request, khởi tạo `Client` với Context an toàn, và đăng ký vào Hub.
 
-* [ ] **Bước 2.5: Xây dựng Email Adapter (SMTP)**
-  * [ ] Tạo file `internal/adapters/outbound/email/smtp_sender.go`.
-  * [ ] Implement interface `EmailPort`.
-  * [ ] Viết logic kết nối SMTP (hoặc tích hợp API SendGrid/Mailgun) để gửi email dựa trên `NotificationEnvelope`.
+* [x] **Bước 2.5: Xây dựng Email Adapter (SMTP)**
+  * [x] Tạo file `internal/adapters/outbound/email/smtp_sender.go`.
+  * [x] Implement interface `EmailPort`.
+  * [x] Viết logic kết nối SMTP (hoặc tích hợp API SendGrid/Mailgun) để gửi email dựa trên `NotificationEnvelope`.
 
 ## Giai đoạn 3: Tích hợp Kafka Core, Dispatcher & Quản lý Tiến trình
 

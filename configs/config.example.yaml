@@ -1,0 +1,39 @@
+# QuickNotify Core Application Configuration (Example Template)
+# Copy this file to configs/config.yaml for local development.
+# NOTE: This file contains configuration private to the QuickNotify service itself.
+
+server:
+  http_port: 8080
+  read_timeout_sec: 15
+  write_timeout_sec: 15
+
+auth:
+  # Secret key used for signing and verifying JWT tokens for WebSocket connections
+  jwt_secret: "your-256-bit-secret-key-change-this-in-production"
+
+email:
+  # Set enabled to true if sending real emails via SMTP, false for mock simulation in log
+  enabled: false
+  host: "smtp.example.com"
+  port: 587
+  username: "smtp_user"
+  password: "smtp_password"
+  from: "no-reply@quicknotify.example.com"
+
+kafka:
+  # Primary / Default Kafka cluster seed brokers for QuickNotify core service.
+  # You can list multiple brokers here for High Availability (HA) failover within this cluster.
+  brokers:
+    - "kafka-node1.internal:9092"
+    - "kafka-node2.internal:9092"
+    - "kafka-node3.internal:9092"
+  consumer_group: "quicknotify-core-group"
+  standard_topic: "global-notify-events"
+  
+  # Path to external consumers registry (defining multi-cluster, multi-project topics and custom translators)
+  consumers_config_path: "configs/consumers.yaml"
+
+log:
+  # Log level: "debug", "info", "warn", "error"
+  level: "debug"
+  development: true

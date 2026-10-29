@@ -1,0 +1,32 @@
+# Binaries and build artifacts
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Test binaries
+*.test
+
+# Go workspace
+go.work
+go.work.sum
+
+# Local development configurations (keep example files committed)
+configs/config.yaml
+configs/config.dev.yaml
+configs/consumers.yaml
+*.local.yaml
+.env
+.env.local
+
+# IDE and OS files
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
