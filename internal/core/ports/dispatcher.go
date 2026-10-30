@@ -31,6 +31,6 @@ type EmailPort interface {
 
 // MessageTranslator defines the port for converting raw provider-specific messages into standardized envelopes.
 type MessageTranslator interface {
-	// Translate converts a raw byte payload into a domain NotificationEnvelope.
-	Translate(raw []byte) (domain.NotificationEnvelope, error)
+	// Translate converts a raw key and byte payload from Kafka into a domain NotificationEnvelope.
+	Translate(key []byte, value []byte) (domain.NotificationEnvelope, error)
 }

@@ -18,9 +18,9 @@ func NewDirectTranslator() ports.MessageTranslator {
 }
 
 // Translate unmarshals the raw JSON byte array directly into a NotificationEnvelope.
-func (d *DirectTranslator) Translate(raw []byte) (domain.NotificationEnvelope, error) {
+func (d *DirectTranslator) Translate(key []byte, value []byte) (domain.NotificationEnvelope, error) {
 	var env domain.NotificationEnvelope
-	if err := json.Unmarshal(raw, &env); err != nil {
+	if err := json.Unmarshal(value, &env); err != nil {
 		return domain.NotificationEnvelope{}, fmt.Errorf("direct json unmarshal failed: %w", err)
 	}
 	return env, nil

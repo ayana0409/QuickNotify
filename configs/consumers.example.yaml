@@ -36,8 +36,8 @@ consumers:
     cluster_id: "cluster_main"
     translator: "direct"
 
-  # Legacy topic from QuickBite: maps old order payload into NotificationEnvelope
-  - topic: "quickbite-orders"
+  # QuickBite food delivery order events topic: translates all order lifecycle events (submitted, waiting-payment, confirmed, preparing, delivering, completed, reverted-to-draft)
+  - topic: "order-events"
     cluster_id: "cluster_quickbite"
     translator: "quickbite_order"
 

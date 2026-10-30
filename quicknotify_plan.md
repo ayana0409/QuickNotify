@@ -84,17 +84,43 @@ Sử dụng checklist này để theo dõi tiến độ phát triển hệ thố
 
 **Mục tiêu:** Linh hoạt consume các topic khác mà không sửa code Core.
 
-* [ ] **Bước 4.1: Định nghĩa Translator Interface**
-  * [ ] Tạo interface `MessageTranslator` (hàm biến đổi `[]byte` sang `NotificationEnvelope`).
+* [x] **Bước 4.1: Định nghĩa Translator Interface**
+  * [x] Tạo interface `MessageTranslator` (hàm biến đổi `[]byte` sang `NotificationEnvelope`).
 
-* [ ] **Bước 4.2: Xây dựng các hàm Translate cụ thể**
-  * [ ] Tạo thư mục `translators/` trong adapter kafka.
-  * [ ] Viết các translator đặc thù (VD: `QuickBiteOrderTranslator`, `ShorterLinkAlertTranslator`).
+* [x] **Bước 4.2: Xây dựng các hàm Translate cụ thể**
+  * [x] Tạo thư mục `translators/` trong adapter kafka.
+  * [x] Viết các translator đặc thù (VD: `QuickBiteOrderTranslator`, `EduTrackExamTranslator`).
 
-* [ ] **Bước 4.3: Viết Registry Map Translator**
-  * [ ] Cấu hình load từ `configs/consumers.yaml`.
-  * [ ] Ánh xạ Tên Topic với Translator tương ứng.
-  * [ ] Điều chỉnh Kafka Consumer để gọi Translator trước khi đẩy vào Dispatcher đối với các topic custom.
+* [x] **Bước 4.3: Viết Registry Map Translator**
+  * [x] Cấu hình load từ `configs/consumers.yaml`.
+  * [x] Ánh xạ Tên Topic với Translator tương ứng.
+  * [x] Điều chỉnh Kafka Consumer để gọi Translator trước khi đẩy vào Dispatcher đối với các topic custom.
+
+## Giai đoạn 4.5: Tái cấu trúc `main.go` → `internal/app/`
+
+**Mục tiêu:** Module hóa wiring code để dễ đọc, dễ test, `main.go` chỉ ~20 dòng.
+
+* [x] **Bước 4.5.1: Tạo `internal/app/logger.go`**
+  * [x] Di chuyển hàm `initLogger()` từ `main.go` vào đây.
+
+* [x] **Bước 4.5.2: Tạo `internal/app/storage.go`**
+  * [x] Viết `initOrderCache()` – khởi tạo Redis với fallback in-memory.
+
+* [x] **Bước 4.5.3: Tạo `internal/app/kafka.go`**
+  * [x] Viết `initKafkaConsumers()` – tạo registry, load consumers.yaml, fallback standard topic.
+  * [x] Struct `kafkaBundle` gom manager + context + cancel func.
+
+* [x] **Bước 4.5.4: Tạo `internal/app/server.go`**
+  * [x] Viết `initHTTPServer()` – mux, /healthz, /ws, CORS wrapper, *http.Server.
+
+* [x] **Bước 4.5.5: Tạo `internal/app/app.go`**
+  * [x] Struct `App`, hàm `New()` orchestrates toàn bộ wiring.
+  * [x] Hàm `Run()` – start consumers, start HTTP, block on signal.
+  * [x] Hàm `shutdown()` – ordered shutdown: Kafka → HTTP → WS → Cache.
+
+* [x] **Bước 4.5.6: Simplify `cmd/quicknotify/main.go`**
+  * [x] Gọi `app.New()` rồi `application.Run()` – chỉ ~20 dòng.
+  * [x] `go vet ./...` PASS, `go build` PASS, `go test -v ./...` PASS.
 
 ## Giai đoạn 5: Triển khai, Kiểm thử & Công cụ Demo
 

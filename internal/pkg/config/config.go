@@ -11,9 +11,10 @@ import (
 
 // ServerConfig defines HTTP server settings.
 type ServerConfig struct {
-	HTTPPort        int `mapstructure:"http_port"`
-	ReadTimeoutSec  int `mapstructure:"read_timeout_sec"`
-	WriteTimeoutSec int `mapstructure:"write_timeout_sec"`
+	HTTPPort        int      `mapstructure:"http_port"`
+	ReadTimeoutSec  int      `mapstructure:"read_timeout_sec"`
+	WriteTimeoutSec int      `mapstructure:"write_timeout_sec"`
+	AllowedOrigins  []string `mapstructure:"allowed_origins"`
 }
 
 // AuthConfig defines authentication parameters.
@@ -35,12 +36,23 @@ type LogConfig struct {
 	Development bool   `mapstructure:"development"`
 }
 
+// RedisConfig defines connection settings for Redis caching.
+type RedisConfig struct {
+	Host     string `mapstructure:"host"`
+	Port     int    `mapstructure:"port"`
+	Username string `mapstructure:"username"`
+	Password string `mapstructure:"password"`
+	DB       int    `mapstructure:"db"`
+	Enabled  bool   `mapstructure:"enabled"`
+}
+
 // AppConfig represents the root application configuration.
 type AppConfig struct {
 	Server ServerConfig `mapstructure:"server"`
 	Auth   AuthConfig   `mapstructure:"auth"`
 	Email  email.Config `mapstructure:"email"`
 	Kafka  KafkaConfig  `mapstructure:"kafka"`
+	Redis  RedisConfig  `mapstructure:"redis"`
 	Log    LogConfig    `mapstructure:"log"`
 }
 
@@ -74,6 +86,7 @@ func LoadConfig(configPath string) (*AppConfig, error) {
 	v.SetDefault("server.http_port", 8080)
 	v.SetDefault("server.read_timeout_sec", 15)
 	v.SetDefault("server.write_timeout_sec", 15)
+	v.SetDefault("server.allowed_origins", []string{"*"})
 	v.SetDefault("auth.jwt_secret", "quicknotify_dev_secret_key_2026")
 	v.SetDefault("email.enabled", false)
 	v.SetDefault("log.level", "debug")

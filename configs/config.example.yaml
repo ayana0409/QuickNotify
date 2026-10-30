@@ -6,6 +6,12 @@ server:
   http_port: 8080
   read_timeout_sec: 15
   write_timeout_sec: 15
+  # Whitelist of allowed origins for CORS and WebSocket handshake.
+  # Use ["*"] only in testing/development. In production, specify exact trusted domains.
+  allowed_origins:
+    - "http://localhost:3000"
+    - "http://localhost:5173"
+    - "https://app.yourdomain.com"
 
 auth:
   # Secret key used for signing and verifying JWT tokens for WebSocket connections
@@ -32,6 +38,15 @@ kafka:
   
   # Path to external consumers registry (defining multi-cluster, multi-project topics and custom translators)
   consumers_config_path: "configs/consumers.yaml"
+
+redis:
+  # Set enabled to true to use Redis for caching order mappings across instances
+  enabled: true
+  host: "localhost"
+  port: 6379
+  username: "default"
+  password: "your_redis_password"
+  db: 0
 
 log:
   # Log level: "debug", "info", "warn", "error"

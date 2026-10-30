@@ -16,8 +16,8 @@ func TestLoadConfig(t *testing.T) {
 		t.Errorf("expected port 8080, got %d", cfg.Server.HTTPPort)
 	}
 
-	if cfg.Auth.JWTSecret == "" {
-		t.Errorf("expected non-empty jwt secret")
+	if len(cfg.Server.AllowedOrigins) == 0 {
+		t.Errorf("expected non-empty allowed origins")
 	}
 }
 

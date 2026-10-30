@@ -7,26 +7,35 @@ import (
 	"go.uber.org/zap"
 )
 
-var upgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-	// Allow all origins for internal and demo environments
-	CheckOrigin: func(r *http.Request) bool {
-		return true
-	},
-}
-
-// Handler handles incoming WebSocket upgrade requests.
+// Handler handles incoming WebSocket upgrade requests with strict Origin checking.
 type Handler struct {
-	hub    *Hub
-	logger *zap.Logger
+	hub            *Hub
+	allowedOrigins []string
+	upgrader       websocket.Upgrader
+	logger         *zap.Logger
 }
 
-// NewHandler creates a new WebSocket route Handler.
-func NewHandler(hub *Hub, logger *zap.Logger) *Handler {
+// NewHandler creates a new WebSocket route Handler with configurable allowed origins.
+func NewHandler(hub *Hub, allowedOrigins []string, logger *zap.Logger) *Handler {
 	return &Handler{
-		hub:    hub,
-		logger: logger,
+		hub:            hub,
+		allowedOrigins: allowedOrigins,
+		logger:         logger,
+		upgrader: websocket.Upgrader{
+			ReadBufferSize:  1024,
+			WriteBufferSize: 1024,
+			CheckOrigin: func(r *http.Request) bool {
+				origin := r.Header.Get("Origin")
+				allowed := IsOriginAllowed(origin, allowedOrigins)
+				if !allowed {
+					logger.Warn("WebSocket handshake rejected: Origin not allowed",
+						zap.String("origin", origin),
+						zap.String("remote_addr", r.RemoteAddr),
+					)
+				}
+				return allowed
+			},
+		},
 	}
 }
 
@@ -40,7 +49,7 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	conn, err := upgrader.Upgrade(w, r, nil)
+	conn, err := h.upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		h.logger.Error("Failed to upgrade connection to WebSocket",
 			zap.String("project_id", projectID),
@@ -62,4 +71,3 @@ func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go client.WritePump()
 	go client.ReadPump()
 }
-

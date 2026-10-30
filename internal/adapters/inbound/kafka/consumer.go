@@ -108,14 +108,16 @@ func (c *Consumer) Start(ctx context.Context) {
 func (c *Consumer) processMessage(ctx context.Context, msg kafka.Message) {
 	c.logger.Debug("Received Kafka message",
 		zap.String("topic", msg.Topic),
+		zap.String("key", string(msg.Key)),
 		zap.Int("partition", msg.Partition),
 		zap.Int64("offset", msg.Offset),
 	)
 
-	envelope, err := c.translator.Translate(msg.Value)
+	envelope, err := c.translator.Translate(msg.Key, msg.Value)
 	if err != nil {
 		c.logger.Error("Failed to translate message payload",
 			zap.String("topic", msg.Topic),
+			zap.String("key", string(msg.Key)),
 			zap.Int64("offset", msg.Offset),
 			zap.Error(err),
 		)
