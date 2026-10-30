@@ -59,26 +59,26 @@ Sử dụng checklist này để theo dõi tiến độ phát triển hệ thố
 
 **Mục tiêu:** Nhận thông điệp chuẩn, định tuyến đến các kênh và đảm bảo hệ thống vận hành bền bỉ.
 
-* [ ] **Bước 3.1: Phát triển Dispatcher Service (Core)**
-  * [ ] Tạo file `internal/core/services/dispatcher.go`.
-  * [ ] Implement `NotificationService`.
-  * [ ] Viết logic duyệt mảng `Channels` và đẩy payload tương ứng sang các Adapter (WebSocket, Email).
+* [x] **Bước 3.1: Phát triển Dispatcher Service (Core)**
+  * [x] Tạo file `internal/core/services/dispatcher.go`.
+  * [x] Implement `NotificationService`.
+  * [x] Viết logic duyệt mảng `Channels` và đẩy payload tương ứng sang các Adapter (WebSocket, Email).
 
-* [ ] **Bước 3.2: Xây dựng Kafka Consumer Adapter**
-  * [ ] Tạo file `internal/adapters/inbound/kafka/consumer.go` (`sarama` hoặc `kafka-go`).
-  * [ ] Cấu hình Worker Pool / Consumer Group lắng nghe topic chuẩn `global-notify-events`.
-  * [ ] Viết logic unmarshal JSON từ Kafka Message sang `NotificationEnvelope`.
+* [x] **Bước 3.2: Xây dựng Kafka Consumer Adapter**
+  * [x] Tạo file `internal/adapters/inbound/kafka/consumer.go` (`sarama` hoặc `kafka-go`).
+  * [x] Cấu hình Worker Pool / Consumer Group lắng nghe topic chuẩn `global-notify-events`.
+  * [x] Viết logic unmarshal JSON từ Kafka Message sang `NotificationEnvelope`.
 
-* [ ] **Bước 3.3: Kết nối Pipeline**
-  * [ ] Trong `cmd/quicknotify/main.go`, khởi tạo Hub, Dispatcher, Email Sender và Kafka Consumer.
-  * [ ] Inject Dispatcher vào Kafka Consumer.
+* [x] **Bước 3.3: Kết nối Pipeline**
+  * [x] Trong `cmd/quicknotify/main.go`, khởi tạo Hub, Dispatcher, Email Sender và Kafka Consumer.
+  * [x] Inject Dispatcher vào Kafka Consumer.
 
-* [ ] **Bước 3.4: Liveness Probe & Graceful Shutdown (Quan trọng)**
-  * [ ] Tạo endpoint HTTP `/healthz` (trả về 200 OK) để phục vụ Docker/K8s liveness/readiness probe.
-  * [ ] Bổ sung channel lắng nghe tín hiệu `os.Interrupt`, `syscall.SIGTERM`.
-  * [ ] Khi nhận tín hiệu tắt: 
-    * [ ] Dừng Kafka consumer để đảm bảo commit offset an toàn.
-    * [ ] Duyệt qua toàn bộ Hub, gửi `Close Frame` chuẩn cho toàn bộ WebSocket clients và đóng kết nối TCP.
+* [x] **Bước 3.4: Liveness Probe & Graceful Shutdown (Quan trọng)**
+  * [x] Tạo endpoint HTTP `/healthz` (trả về 200 OK) để phục vụ Docker/K8s liveness/readiness probe.
+  * [x] Bổ sung channel lắng nghe tín hiệu `os.Interrupt`, `syscall.SIGTERM`.
+  * [x] Khi nhận tín hiệu tắt: 
+    * [x] Dừng Kafka consumer để đảm bảo commit offset an toàn.
+    * [x] Duyệt qua toàn bộ Hub, gửi `Close Frame` chuẩn cho toàn bộ WebSocket clients và đóng kết nối TCP.
 
 ## Giai đoạn 4: Mở rộng với Custom Translators (Inbound Adapters)
 
