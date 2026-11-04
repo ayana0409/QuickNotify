@@ -9,12 +9,12 @@ import (
 )
 
 func main() {
-	// Allow overriding the config file path via a CLI flag
-	configPath := flag.String("config", "configs/config.yaml", "Path to the application configuration YAML file")
+	// Allow specifying the .env file path via CLI flag; defaults to ".env" in the working directory
+	envPath := flag.String("env", ".env", "Path to the .env configuration file")
 	flag.Parse()
 
-	// Initialise and wire all application dependencies
-	application, err := app.New(*configPath)
+	// Initialise and wire all application dependencies from the .env file
+	application, err := app.New(*envPath)
 	if err != nil {
 		fmt.Printf("FATAL: failed to initialise application: %v\n", err)
 		os.Exit(1)

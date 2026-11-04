@@ -31,12 +31,13 @@ type App struct {
 }
 
 // New loads configuration, wires all dependencies, and returns a ready-to-run App.
+// envPath is the path to the .env file (e.g. ".env", "/run/secrets/.env").
 // Returns an error if any critical dependency (config, logger, …) cannot be initialised.
-func New(configPath string) (*App, error) {
-	// 1. Load application configuration from YAML file
-	cfg, err := config.LoadConfig(configPath)
+func New(envPath string) (*App, error) {
+	// 1. Load application configuration from .env file + OS environment variables
+	cfg, err := config.LoadConfig(envPath)
 	if err != nil {
-		return nil, fmt.Errorf("load config %q: %w", configPath, err)
+		return nil, fmt.Errorf("load config: %w", err)
 	}
 
 	// 2. Initialise structured logger (must come before anything that logs)
@@ -67,8 +68,8 @@ func New(configPath string) (*App, error) {
 		return nil, fmt.Errorf("init kafka consumers: %w", err)
 	}
 
-	// 7. Build the HTTP server (mux, routes, CORS, WS handler)
-	srv := initHTTPServer(cfg, wsHub, kafkaB.manager, logger)
+	// 7. Build the HTTP server (mux, routes, CORS, WS handler, REST notify API)
+	srv := initHTTPServer(cfg, wsHub, dispatcher, kafkaB.manager, logger)
 
 	return &App{
 		cfg:        cfg,

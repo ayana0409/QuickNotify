@@ -94,8 +94,8 @@ func (c *Consumer) Start(ctx context.Context) {
 					zap.String("topic", c.topic),
 					zap.Error(err),
 				)
-				// Backoff briefly on error before retrying fetch
-				time.Sleep(500 * time.Millisecond)
+				// Backoff briefly on connection/fetch error before retrying
+				time.Sleep(3 * time.Second)
 				continue
 			}
 

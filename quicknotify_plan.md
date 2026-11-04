@@ -126,17 +126,17 @@ Sử dụng checklist này để theo dõi tiến độ phát triển hệ thố
 
 **Mục tiêu:** Đóng gói, đưa lên môi trường và trang bị công cụ để test/demo hiệu quả.
 
-* [ ] **Bước 5.1: Đóng gói Docker**
-  * [ ] Viết `Dockerfile` (Multi-stage build).
-  * [ ] Cấu hình `docker-compose.yml` với build local và environment variables.
+* [x] **Bước 5.1: Đóng gói Docker**
+  * [x] Viết `Dockerfile` đa tầng (Multi-stage build) đặt tại thư mục gốc, tối ưu kích thước, bảo mật non-root user và tích hợp healthcheck qua `/healthz`.
+  * [x] Hỗ trợ chạy container độc lập với giới hạn tài nguyên nghiêm ngặt **1 CPU và 256MB RAM** qua cờ `--cpus=1.0 --memory=256m`.
 
-* [ ] **Bước 5.2: Cấu hình Ingress/Reverse Proxy**
-  * [ ] Cấu hình Traefik labels trong compose file để map domain và route traffic `/ws`.
+* [x] **Bước 5.2: Triển khai Độc lập & Cấu hình Môi trường**
+  * [x] Loại bỏ Docker Compose theo yêu cầu, chuyển sang quản lý trực tiếp bằng Docker standalone hoặc orchestrator ngoài.
 
-* [ ] **Bước 5.3: End-to-End Testing**
-  * [ ] Kết nối nhiều clients.
-  * [ ] Publish message test vào Kafka và kiểm tra hệ thống Multi-session, Scope Filtering, và Non-blocking send.
+* [x] **Bước 5.3: End-to-End Testing**
+  * [x] Xây dựng công cụ kiểm thử E2E (`scripts/test_producer/main.go`).
+  * [x] Viết tài liệu kịch bản kiểm thử End-to-End (`docs/e2e_testing_guide.md`) bao gồm Multi-session, Scope Filtering, Redis Cache session và Non-blocking send.
 
-* [ ] **Bước 5.4: Xây dựng bộ công cụ Demo & Test nội bộ**
-  * [ ] **Tool tạo Mock JWT Token:** Viết 1 script Go nhỏ (VD: `scripts/gen_token/main.go`) để sinh nhanh JWT với `project_id` và `user_id` tùy biến truyền qua CLI (phục vụ test handshake ngay không cần Auth Service).
-  * [ ] **Trang Web Test Client (`test_client.html`):** Tạo một file HTML/JS thuần cực nhẹ. Chứa form nhập JWT, nút Connect WS, màn hình in log realtime và hiển thị popup (toast/alert) khi có Notification bắn về (trực quan hơn dùng `wscat`).
+* [x] **Bước 5.4: Xây dựng bộ công cụ Demo & Test nội bộ**
+  * [x] **Tool tạo Mock JWT Token:** Viết script Go `scripts/gen_token/main.go` để sinh nhanh JWT với `project_id` và `user_id` tùy biến truyền qua CLI (phục vụ test handshake ngay không cần Auth Service).
+  * [x] **Trang Web Test Client (`test_client.html` & `web/test_client.html`):** Tạo file HTML/JS thuần cực nhẹ, không dependency ngoài. Chứa form nhập JWT, preset danh tính, nút Connect WS, màn hình in log realtime, thống kê uptime/heartbeat, filter theo Scope và hiển thị popup toast thông báo realtime kèm âm thanh synthesizer.

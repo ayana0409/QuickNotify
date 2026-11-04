@@ -21,11 +21,12 @@ type kafkaBundle struct {
 }
 
 // initKafkaConsumers wires up the translator registry, loads multi-cluster
-// consumer definitions from consumers.yaml (when configured), and falls back
-// to the standard single-topic consumer when no definitions are loaded.
+// consumer definitions from KAFKA_CLUSTERS/KAFKA_CONSUMERS env vars (when configured),
+// and falls back to the standard single-topic consumer when no custom mapping is loaded.
 //
-// The dispatcher is injected here because ConsumerManager forwards translated
-// messages to it after each Kafka message is consumed.
+// Architecture:
+// 1. QuickNotify's own core consumer: KAFKA_BROKERS + KAFKA_STANDARD_TOPIC (DirectTranslator)
+// 2. External project consumers: KAFKA_CLUSTERS + KAFKA_CONSUMERS (custom translators per cluster/topic)
 //
 // Returns a kafkaBundle; the caller must invoke shutdown() which calls
 // bundle.cancelConsumers() then bundle.manager.Close().
@@ -42,31 +43,31 @@ func initKafkaConsumers(
 
 	consumerManager := kafka.NewConsumerManager(translatorRegistry, dispatcher, logger)
 
-	// Load multi-cluster consumer definitions from an external consumers.yaml when set
-	if cfg.Kafka.ConsumersConfigPath != "" {
-		consumersCfg, err := config.LoadConsumersConfig(cfg.Kafka.ConsumersConfigPath)
-		if err != nil {
-			// Non-fatal: log and continue so the standard-topic fallback still runs
-			logger.Warn(
-				"Failed to load consumers config, will fall back to standard topic",
-				zap.String("path", cfg.Kafka.ConsumersConfigPath),
-				zap.Error(err),
-			)
-		} else {
-			if err := consumerManager.InitFromConfig(consumersCfg, cfg.Kafka.ConsumerGroup); err != nil {
-				cancelConsumers()
-				return nil, fmt.Errorf("init consumers from config: %w", err)
+	// --- Path 1: Multi-cluster mapping from KAFKA_CLUSTERS + KAFKA_CONSUMERS ---
+	// When external/legacy project Kafka clusters are configured, use the registry.
+	hasStandardTopicInConsumers := false
+	if cfg.Kafka.ConsumersConfig != nil && len(cfg.Kafka.ConsumersConfig.Consumers) > 0 {
+		for _, c := range cfg.Kafka.ConsumersConfig.Consumers {
+			if c.Topic == cfg.Kafka.StandardTopic {
+				hasStandardTopicInConsumers = true
+				break
 			}
+		}
+		if err := consumerManager.InitFromConfig(cfg.Kafka.ConsumersConfig, cfg.Kafka.ConsumerGroup); err != nil {
+			cancelConsumers()
+			return nil, fmt.Errorf("init consumers from env config: %w", err)
 		}
 	}
 
-	// Fallback: if no consumers were loaded from file AND a standard topic is configured,
-	// spin up one consumer on the standard topic using the DirectTranslator.
-	if consumerManager.TotalConsumers() == 0 &&
+	// --- Path 2: Core standard topic consumer ---
+	// If the standard core topic was not already declared in KAFKA_CONSUMERS,
+	// always initialize it using QuickNotify's primary brokers and DirectTranslator.
+	if !hasStandardTopicInConsumers &&
 		len(cfg.Kafka.Brokers) > 0 &&
 		cfg.Kafka.StandardTopic != "" {
 		logger.Info(
-			"No consumers loaded from consumers.yaml; initialising standard topic consumer",
+			"Initialising core standard topic consumer",
+			zap.Strings("brokers", cfg.Kafka.Brokers),
 			zap.String("topic", cfg.Kafka.StandardTopic),
 		)
 		coreConsumer := kafka.NewConsumer(

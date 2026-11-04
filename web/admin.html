@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QuickNotify - Admin Dashboard</title>
+  <style>
+    :root {
+      --bg-primary: #090d16;
+      --bg-secondary: #0f172a;
+      --bg-card: #1e293b;
+      --bg-input: #0b1120;
+      --border-color: #334155;
+      --border-focus: #38bdf8;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-color: #38bdf8;
+      --accent-hover: #0284c7;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --badge-user: #818cf8;
+      --badge-project: #38bdf8;
+      --badge-system: #f43f5e;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ========================================= */
+    /* Login Modal Overlay                       */
+    /* ========================================= */
+    #loginModal {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 30%, #1e293b 0%, #090d16 80%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+
+    .login-box {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+      width: 100%;
+      max-width: 420px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .login-header {
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .login-logo {
+      width: 48px;
+      height: 48px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: #090d16;
+      margin-bottom: 4px;
+    }
+
+    .login-title {
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+    }
+
+    .login-desc {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .alert-box {
+      background-color: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      display: none;
+    }
+
+    /* ========================================= */
+    /* Header & Navigation                       */
+    /* ========================================= */
+    header {
+      background-color: var(--bg-secondary);
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-logo {
+      width: 34px;
+      height: 34px;
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      color: #090d16;
+    }
+
+    .brand-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      border-radius: 9999px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      background-color: rgba(16, 185, 129, 0.15);
+      color: var(--success-color);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: currentColor;
+      box-shadow: 0 0 8px currentColor;
+    }
+
+    .user-pill {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
+    /* ========================================= */
+    /* Main Layout                               */
+    /* ========================================= */
+    main {
+      flex: 1;
+      padding: 24px 28px;
+      max-width: 1500px;
+      width: 100%;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+    /* Overview Metric Cards */
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 16px;
+    }
+
+    .metric-card {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .metric-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .metric-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent-color);
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .metric-sub {
+      font-size: 0.75rem;
+      color: var(--text-secondary);
+    }
+
+    /* Dashboard Content Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 1024px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .panel {
+      background-color: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 14px;
+    }
+
+    .panel-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    /* Form Elements */
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    input, select, textarea {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      color: var(--text-primary);
+      padding: 10px 14px;
+      font-size: 0.9rem;
+      outline: none;
+      transition: border-color 0.15s ease, box-shadow 0.15s ease;
+      font-family: inherit;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
+    }
+
+    textarea {
+      font-family: var(--font-mono);
+      font-size: 0.8rem;
+      min-height: 70px;
+      resize: vertical;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    button {
+      background-color: var(--accent-color);
+      color: #090d16;
+      border: none;
+      border-radius: 8px;
+      padding: 11px 18px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background-color 0.15s ease, transform 0.05s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button:hover {
+      background-color: var(--accent-hover);
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    button.btn-danger {
+      background-color: var(--danger-color);
+      color: #ffffff;
+    }
+
+    button.btn-danger:hover {
+      background-color: #dc2626;
+    }
+
+    button.btn-secondary {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border: 1px solid var(--border-color);
+    }
+
+    button.btn-secondary:hover {
+      background-color: #334155;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Tenant Inspector */
+    .tenant-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .tenant-item {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+    }
+
+    .tenant-name {
+      font-weight: 700;
+      color: var(--accent-color);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Live Feed */
+    .feed-container {
+      display: flex;
+      flex-direction: column;
+      height: 600px;
+    }
+
+    .feed-filter-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .filter-tabs {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tab-btn {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      font-size: 0.8rem;
+      border-radius: 6px;
+    }
+
+    .tab-btn.active {
+      background-color: var(--accent-color);
+      color: #090d16;
+      border-color: var(--accent-color);
+    }
+
+    .feed-list {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 14px;
+      padding-right: 6px;
+    }
+
+    .msg-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: fadeIn 0.2s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.8rem;
+    }
+
+    .scope-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .scope-user {
+      background-color: rgba(129, 140, 248, 0.2);
+      color: var(--badge-user);
+      border: 1px solid var(--badge-user);
+    }
+
+    .scope-project_global {
+      background-color: rgba(56, 189, 248, 0.2);
+      color: var(--badge-project);
+      border: 1px solid var(--badge-project);
+    }
+
+    .scope-system_global {
+      background-color: rgba(244, 63, 94, 0.2);
+      color: var(--badge-system);
+      border: 1px solid var(--badge-system);
+    }
+
+    .msg-body {
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .msg-json {
+      background-color: var(--bg-input);
+      border-radius: 6px;
+      padding: 8px 12px;
+      font-family: var(--font-mono);
+      font-size: 0.75rem;
+      color: #cbd5e1;
+      overflow-x: auto;
+      max-height: 140px;
+    }
+
+    /* Toast Notification */
+    #toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      z-index: 9999;
+      max-width: 380px;
+      width: 100%;
+      pointer-events: none;
+    }
+
+    .toast {
+      pointer-events: auto;
+      background-color: #1e293b;
+      border: 1px solid var(--accent-color);
+      border-left: 5px solid var(--accent-color);
+      border-radius: 8px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      transform: translateX(100%);
+      opacity: 0;
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.show {
+      transform: translateX(0);
+      opacity: 1;
+    }
+
+    .toast.scope-system_global {
+      border-left-color: var(--badge-system);
+    }
+
+    .toast.scope-project_global {
+      border-left-color: var(--badge-project);
+    }
+
+    .toast.scope-user {
+      border-left-color: var(--badge-user);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========================================= -->
+  <!-- Login Dialog (Auth Gate)                  -->
+  <!-- ========================================= -->
+  <div id="loginModal">
+    <div class="login-box">
+      <div class="login-header">
+        <div class="login-logo">QN</div>
+        <div class="login-title">QuickNotify Admin</div>
+        <div class="login-desc">Sign in with system administrator credentials</div>
+      </div>
+
+      <div id="loginError" class="alert-box"></div>
+
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <div class="form-group" style="margin-bottom: 14px;">
+          <label for="adminUsername">Username</label>
+          <input id="adminUsername" type="text" value="admin" placeholder="admin" required autofocus>
+        </div>
+
+        <div class="form-group" style="margin-bottom: 20px;">
+          <label for="adminPassword">Password</label>
+          <input id="adminPassword" type="password" placeholder="••••••••••••" required>
+        </div>
+
+        <button type="submit" id="loginBtn" style="width: 100%;">
+          🔐 Sign In to Control Panel
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================= -->
+  <!-- Top Navigation Header                     -->
+  <!-- ========================================= -->
+  <header>
+    <div class="brand">
+      <div class="brand-logo">QN</div>
+      <div>
+        <div class="brand-title">QuickNotify Admin Console</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">Enterprise Multi-tenant Notification Core</div>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="status-badge">
+        <span class="status-dot"></span>
+        <span>ENGINE ONLINE</span>
+      </div>
+      <div class="user-pill">
+        Admin: <strong id="adminUserDisplay">admin</strong>
+      </div>
+      <button class="btn-secondary" style="font-size: 0.8rem; padding: 6px 14px;" onclick="handleLogout()">
+        Logout
+      </button>
+    </div>
+  </header>
+
+  <!-- ========================================= -->
+  <!-- Main Dashboard Content                    -->
+  <!-- ========================================= -->
+  <main>
+    <!-- Live System Metric Cards -->
+    <section class="metrics-grid">
+      <div class="metric-card">
+        <span class="metric-label">Active WS Connections</span>
+        <span id="metricWsCount" class="metric-value">0</span>
+        <span class="metric-sub">Connected client sessions</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Online Projects (Tenants)</span>
+        <span id="metricTenantCount" class="metric-value">0</span>
+        <span id="metricTenantList" class="metric-sub">No active projects</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Events Dispatched</span>
+        <span id="metricEventCount" class="metric-value">0</span>
+        <span class="metric-sub">Across all scopes in session</span>
+      </div>
+
+      <div class="metric-card">
+        <span class="metric-label">Kafka & Redis Cache</span>
+        <span id="metricEngineStatus" class="metric-value" style="font-size: 1.25rem; color: var(--success-color);">
+          Active
+        </span>
+        <span id="metricEngineDetail" class="metric-sub">Memory Cache fallback enabled</span>
+      </div>
+    </section>
+
+    <!-- Main Grid: Left Dispatcher, Right Live Feed -->
+    <div class="dashboard-grid">
+
+      <!-- Left Column: Notification Dispatcher Form -->
+      <section class="panel">
+        <div class="panel-header">
+          <div class="panel-title">📢 Dispatch Notification</div>
+          <span style="font-size: 0.75rem; color: var(--text-muted);">Scope-based Routing</span>
+        </div>
+
+        <form id="dispatchForm" onsubmit="handleDispatch(event)">
+          <!-- Scope Selection -->
+          <div class="form-group">
+            <label for="scopeSelect">Notification Scope</label>
+            <select id="scopeSelect" onchange="handleScopeChange()">
+              <option value="user">👤 User (Cá nhân - Targeted)</option>
+              <option value="project_global">🏢 Project Global (Toàn bộ người dùng dự án)</option>
+              <option value="system_global">🌐 System Global (Toàn hệ thống - Tất cả dự án)</option>
+            </select>
+          </div>
+
+          <!-- Project Identifier -->
+          <div class="form-group" id="projectGroup">
+            <label for="projectInput">Target Project (Tenant ID)</label>
+            <input id="projectInput" type="text" list="projectSuggestions" value="shorterlink" placeholder="e.g. shorterlink, quickbite" required>
+            <datalist id="projectSuggestions">
+              <option value="shorterlink">
+              <option value="quickbite">
+              <option value="edutrack">
+              <option value="system">
+            </datalist>
+          </div>
+
+          <!-- Target User Identifier (Conditional on scope=user) -->
+          <div class="form-group" id="userGroup">
+            <label for="userInput">Target User ID</label>
+            <input id="userInput" type="text" value="usr_9988aabb" placeholder="e.g. usr_9988aabb, user_101">
+          </div>
+
+          <!-- Notification Message Content -->
+          <div class="form-group">
+            <label for="messageInput">Message Text</label>
+            <input id="messageInput" type="text" value="ShorterLink: Link của bạn vừa đạt mốc 10,000 lượt click!" placeholder="Type notification message..." required>
+          </div>
+
+          <!-- Priority & Channels -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-group">
+              <label for="prioritySelect">Priority</label>
+              <select id="prioritySelect">
+                <option value="normal">Normal</option>
+                <option value="high" selected>High</option>
+                <option value="low">Low</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label>Delivery Channel</label>
+              <div style="display: flex; gap: 12px; margin-top: 8px;">
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                  <input type="checkbox" id="chanWs" checked> WebSocket
+                </label>
+                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                  <input type="checkbox" id="chanEmail"> Email
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Extra JSON Payload (Optional) -->
+          <div class="form-group">
+            <label for="extraJsonInput">Extra Data (Optional JSON)</label>
+            <textarea id="extraJsonInput" placeholder='{"link_id": "lnk_123", "clicks": 10000}'></textarea>
+          </div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="dispatchBtn" style="width: 100%; margin-top: 6px;">
+            🚀 Send Notification Now
+          </button>
+        </form>
+
+        <!-- Connected Tenants Inspector -->
+        <div style="margin-top: 8px;">
+          <div class="panel-header" style="padding-bottom: 8px; margin-bottom: 8px;">
+            <span style="font-size: 0.85rem; font-weight: 700;">Active Tenants Online</span>
+            <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="fetchStats()">Refresh</button>
+          </div>
+          <div id="tenantListContainer" class="tenant-list">
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 12px;">
+              No clients currently connected.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Realtime Feed & System Monitor -->
+      <section class="panel feed-container">
+        <div class="feed-filter-bar">
+          <div class="filter-tabs">
+            <button class="tab-btn active" onclick="setFilter('all')">All (<span id="countAll">0</span>)</button>
+            <button class="tab-btn" onclick="setFilter('user')">User (<span id="countUser">0</span>)</button>
+            <button class="tab-btn" onclick="setFilter('project_global')">Project (<span id="countProject">0</span>)</button>
+            <button class="tab-btn" onclick="setFilter('system_global')">System (<span id="countSystem">0</span>)</button>
+          </div>
+          <div class="btn-row">
+            <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="clearFeed()">Clear Feed</button>
+          </div>
+        </div>
+
+        <div id="feedList" class="feed-list">
+          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 6px;">
+            <span>Realtime notification feed will stream here.</span>
+            <span style="font-size: 0.8rem;">Listening for live events across all connected projects.</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Popup Toast Notification Container -->
+  <div id="toast-container"></div>
+
+  <script>
+    // App State
+    let adminToken = localStorage.getItem("qn_admin_token");
+    let adminUsername = localStorage.getItem("qn_admin_user") || "admin";
+    let adminSocket = null;
+    let pollInterval = null;
+    let totalDispatched = 0;
+    let activeFilter = 'all';
+    let allFeedItems = [];
+    let countUser = 0, countProject = 0, countSystem = 0;
+
+    // Initialize View
+    window.addEventListener("DOMContentLoaded", () => {
+      if (adminToken) {
+        showDashboard();
+      } else {
+        showLogin();
+      }
+    });
+
+    function showLogin() {
+      document.getElementById("loginModal").style.display = "flex";
+      if (pollInterval) clearInterval(pollInterval);
+      if (adminSocket) adminSocket.close();
+    }
+
+    function showDashboard() {
+      document.getElementById("loginModal").style.display = "none";
+      document.getElementById("adminUserDisplay").innerText = adminUsername;
+      fetchStats();
+      if (pollInterval) clearInterval(pollInterval);
+      pollInterval = setInterval(fetchStats, 4000);
+      connectAdminWebSocket();
+    }
+
+    // Login Handler
+    function handleLogin(event) {
+      event.preventDefault();
+      const usernameInput = document.getElementById("adminUsername").value.trim();
+      const passwordInput = document.getElementById("adminPassword").value;
+      const errorBox = document.getElementById("loginError");
+      const btn = document.getElementById("loginBtn");
+
+      errorBox.style.display = "none";
+      btn.disabled = true;
+      btn.innerText = "Authenticating...";
+
+      fetch("/api/v1/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username: usernameInput, password: passwordInput })
+      })
+      .then(res => {
+        if (!res.ok) {
+          throw new Error("Invalid username or password");
+        }
+        return res.json();
+      })
+      .then(data => {
+        adminToken = data.token;
+        adminUsername = data.username;
+        localStorage.setItem("qn_admin_token", adminToken);
+        localStorage.setItem("qn_admin_user", adminUsername);
+        showDashboard();
+      })
+      .catch(err => {
+        errorBox.innerText = err.message;
+        errorBox.style.display = "block";
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerText = "🔐 Sign In to Control Panel";
+      });
+    }
+
+    // Logout Handler
+    function handleLogout() {
+      localStorage.removeItem("qn_admin_token");
+      localStorage.removeItem("qn_admin_user");
+      adminToken = null;
+      showLogin();
+    }
+
+    // Fetch System Stats & Online Tenants
+    function fetchStats() {
+      if (!adminToken) return;
+
+      fetch("/api/v1/admin/stats", {
+        headers: { "Authorization": `Bearer ${adminToken}` }
+      })
+      .then(res => {
+        if (res.status === 401) {
+          handleLogout();
+          throw new Error("Session expired");
+        }
+        return res.json();
+      })
+      .then(data => {
+        document.getElementById("metricWsCount").innerText = data.ws_connections;
+        const tenants = data.tenants || [];
+        document.getElementById("metricTenantCount").innerText = tenants.length;
+
+        // Render Tenants
+        const tenantContainer = document.getElementById("tenantListContainer");
+        const suggestionList = document.getElementById("projectSuggestions");
+
+        if (tenants.length === 0) {
+          tenantContainer.innerHTML = `
+            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 12px;">
+              No clients currently connected.
+            </div>`;
+          document.getElementById("metricTenantList").innerText = "No active projects";
+        } else {
+          document.getElementById("metricTenantList").innerText = tenants.map(t => t.project_id).join(", ");
+          tenantContainer.innerHTML = tenants.map(t => `
+            <div class="tenant-item">
+              <span class="tenant-name">🏢 ${escapeHtml(t.project_id)}</span>
+              <span style="font-size: 0.75rem; color: var(--text-secondary);">
+                <strong>${t.user_count}</strong> users &bull; <strong>${t.session_count}</strong> active tabs
+              </span>
+            </div>
+          `).join('');
+
+          // Update datalist suggestions dynamically
+          suggestionList.innerHTML = tenants.map(t => `<option value="${escapeHtml(t.project_id)}">`).join('') +
+            `<option value="shorterlink"><option value="quickbite"><option value="system">`;
+        }
+      })
+      .catch(err => {
+        console.warn("Failed to fetch admin stats:", err);
+      });
+    }
+
+    // Scope Form Dynamics
+    function handleScopeChange() {
+      const scope = document.getElementById("scopeSelect").value;
+      const userGroup = document.getElementById("userGroup");
+      const projectGroup = document.getElementById("projectGroup");
+
+      if (scope === "user") {
+        userGroup.style.display = "flex";
+        projectGroup.style.display = "flex";
+      } else if (scope === "project_global") {
+        userGroup.style.display = "none";
+        projectGroup.style.display = "flex";
+      } else if (scope === "system_global") {
+        userGroup.style.display = "none";
+        projectGroup.style.display = "none";
+      }
+    }
+
+    // Dispatch Notification Submit
+    function handleDispatch(event) {
+      event.preventDefault();
+      const scope = document.getElementById("scopeSelect").value;
+      const projectID = scope === "system_global" ? "system" : document.getElementById("projectInput").value.trim().toLowerCase();
+      const targetUser = document.getElementById("userInput").value.trim();
+      const message = document.getElementById("messageInput").value.trim();
+      const priority = document.getElementById("prioritySelect").value;
+      const btn = document.getElementById("dispatchBtn");
+
+      const channels = [];
+      if (document.getElementById("chanWs").checked) channels.push("websocket");
+      if (document.getElementById("chanEmail").checked) channels.push("email");
+      if (channels.length === 0) channels.push("websocket");
+
+      let extraData = {};
+      const extraRaw = document.getElementById("extraJsonInput").value.trim();
+      if (extraRaw) {
+        try {
+          extraData = JSON.parse(extraRaw);
+        } catch (err) {
+          alert("Invalid Extra Data JSON format: " + err.message);
+          return;
+        }
+      }
+
+      extraData.message = message;
+
+      const payload = {
+        event_id: "evt_admin_" + Date.now(),
+        project_id: projectID,
+        scope: scope,
+        priority: priority,
+        channels: channels,
+        target: {
+          user_id: scope === "user" ? targetUser : ""
+        },
+        content: {
+          type: "raw",
+          data: extraData
+        }
+      };
+
+      btn.disabled = true;
+      btn.innerText = "Dispatching...";
+
+      fetch("/api/v1/notify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken}`
+        },
+        body: JSON.stringify(payload)
+      })
+      .then(res => {
+        if (!res.ok) return res.text().then(t => { throw new Error(t); });
+        return res.json();
+      })
+      .then(data => {
+        totalDispatched++;
+        document.getElementById("metricEventCount").innerText = totalDispatched;
+        showToast(payload);
+        // Feed update
+        addFeedItem(payload);
+      })
+      .catch(err => {
+        alert("Failed to dispatch notification: " + err.message);
+      })
+      .finally(() => {
+        btn.disabled = false;
+        btn.innerText = "🚀 Send Notification Now";
+      });
+    }
+
+    // WebSocket Stream Connection for Admin Monitor
+    function connectAdminWebSocket() {
+      if (!adminToken) return;
+      if (adminSocket) adminSocket.close();
+
+      const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+      const host = window.location.host;
+      const wsUrl = `${protocol}//${host}/ws?token=${encodeURIComponent(adminToken)}`;
+
+      adminSocket = new WebSocket(wsUrl);
+
+      adminSocket.onmessage = (event) => {
+        try {
+          const lines = event.data.split('\n').filter(Boolean);
+          for (const line of lines) {
+            const parsed = JSON.parse(line);
+            addFeedItem(parsed);
+            showToast(parsed);
+          }
+        } catch (e) {
+          console.warn("WebSocket non-json frame:", event.data);
+        }
+      };
+
+      adminSocket.onclose = () => {
+        // Reconnect quietly after 5s if still logged in
+        if (adminToken) setTimeout(connectAdminWebSocket, 5000);
+      };
+    }
+
+    function addFeedItem(env) {
+      allFeedItems.unshift(env);
+      const scope = env.scope || 'user';
+      if (scope === 'user') countUser++;
+      else if (scope === 'project_global') countProject++;
+      else if (scope === 'system_global') countSystem++;
+
+      document.getElementById("countAll").innerText = allFeedItems.length;
+      document.getElementById("countUser").innerText = countUser;
+      document.getElementById("countProject").innerText = countProject;
+      document.getElementById("countSystem").innerText = countSystem;
+
+      renderFeed();
+    }
+
+    function setFilter(filter) {
+      activeFilter = filter;
+      document.querySelectorAll(".tab-btn").forEach(btn => btn.classList.remove("active"));
+      event.target.classList.add("active");
+      renderFeed();
+    }
+
+    function renderFeed() {
+      const feedList = document.getElementById("feedList");
+      const filtered = allFeedItems.filter(item => {
+        if (activeFilter === "all") return true;
+        return item.scope === activeFilter;
+      });
+
+      if (filtered.length === 0) {
+        feedList.innerHTML = `
+          <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); font-size: 0.85rem;">
+            No events match the filter '${activeFilter}'.
+          </div>`;
+        return;
+      }
+
+      feedList.innerHTML = filtered.map(item => {
+        const scope = item.scope || "user";
+        const messageText = item.content?.data?.message || JSON.stringify(item.content);
+        const timeStr = new Date().toLocaleTimeString();
+
+        return `
+          <div class="msg-card">
+            <div class="msg-header">
+              <span class="scope-badge scope-${scope}">${scope}</span>
+              <span style="font-family: var(--font-mono); font-size: 0.75rem; color: var(--text-secondary);">
+                ${item.event_id || 'no-id'} &bull; <strong>${item.project_id || 'system'}</strong>
+                ${item.target?.user_id ? ` &bull; -> ${item.target.user_id}` : ''}
+              </span>
+              <span style="font-size: 0.75rem; color: var(--text-muted);">${timeStr}</span>
+            </div>
+            <div class="msg-body">
+              <strong>${escapeHtml(messageText)}</strong>
+            </div>
+            <pre class="msg-json">${escapeHtml(JSON.stringify(item, null, 2))}</pre>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function clearFeed() {
+      allFeedItems = [];
+      countUser = 0;
+      countProject = 0;
+      countSystem = 0;
+      document.getElementById("countAll").innerText = "0";
+      document.getElementById("countUser").innerText = "0";
+      document.getElementById("countProject").innerText = "0";
+      document.getElementById("countSystem").innerText = "0";
+      renderFeed();
+    }
+
+    function showToast(env) {
+      const container = document.getElementById("toast-container");
+      const toast = document.createElement("div");
+      const scope = env.scope || "user";
+      toast.className = `toast scope-${scope}`;
+
+      const msgText = env.content?.data?.message || "New notification dispatched";
+
+      toast.innerHTML = `
+        <div style="font-size: 0.85rem; font-weight: 700; display: flex; justify-content: space-between;">
+          <span>🔔 ${env.project_id ? env.project_id.toUpperCase() : 'SYSTEM'}</span>
+          <span class="scope-badge scope-${scope}">${scope}</span>
+        </div>
+        <div style="font-size: 0.85rem; color: var(--text-primary);">${escapeHtml(msgText)}</div>
+      `;
+
+      container.appendChild(toast);
+      setTimeout(() => toast.classList.add("show"), 10);
+      setTimeout(() => {
+        toast.classList.remove("show");
+        setTimeout(() => toast.remove(), 300);
+      }, 5000);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return "";
+      return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+  </script>
+</body>
+</html>
+

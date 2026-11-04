@@ -189,3 +189,39 @@ func (h *Hub) TotalConnections() int {
 	return count
 }
 
+// TenantOverview provides a summary of connected users and sessions per project.
+type TenantOverview struct {
+	ProjectID    string   `json:"project_id"`
+	UserCount    int      `json:"user_count"`
+	SessionCount int      `json:"session_count"`
+	OnlineUsers  []string `json:"online_users,omitempty"`
+}
+
+// GetTenantOverviews returns an overview of all currently connected projects and their user counts.
+func (h *Hub) GetTenantOverviews() []TenantOverview {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	var result []TenantOverview
+	for projectID, projectUsers := range h.clients {
+		sessionCount := 0
+		var onlineUsers []string
+		for userID, userSessions := range projectUsers {
+			if len(userSessions) > 0 {
+				sessionCount += len(userSessions)
+				onlineUsers = append(onlineUsers, userID)
+			}
+		}
+
+		if sessionCount > 0 {
+			result = append(result, TenantOverview{
+				ProjectID:    projectID,
+				UserCount:    len(onlineUsers),
+				SessionCount: sessionCount,
+				OnlineUsers:  onlineUsers,
+			})
+		}
+	}
+	return result
+}
+
