@@ -220,15 +220,36 @@ func initHTTPServer(
 	authMiddleware := websocket.AuthMiddleware(cfg.Auth.JWTSecret, logger)
 	mux.Handle("/ws", authMiddleware(wsHandler))
 
-	// --- Wrap the whole mux with CORS middleware ---
+	// --- Wrap the whole mux with CORS and Subpath middleware ---
 	// The CORS middleware handles preflight OPTIONS requests and adds
 	// appropriate headers for cross-origin regular HTTP calls.
 	corsHandler := websocket.CORSMiddleware(cfg.Server.AllowedOrigins)(mux)
 
+	// Subpath normalization middleware:
+	// Allows QuickNotify to serve seamlessly whether accessed directly at root or
+	// behind a subpath reverse proxy (e.g. /quick-notify) with or without path stripping.
+	subpathHandler := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		p := r.URL.Path
+		if cfg.Server.BasePath != "" && strings.HasPrefix(p, cfg.Server.BasePath) {
+			trimmed := strings.TrimPrefix(p, cfg.Server.BasePath)
+			if trimmed == "" {
+				trimmed = "/"
+			}
+			r.URL.Path = trimmed
+		} else if strings.HasPrefix(p, "/quick-notify") {
+			trimmed := strings.TrimPrefix(p, "/quick-notify")
+			if trimmed == "" {
+				trimmed = "/"
+			}
+			r.URL.Path = trimmed
+		}
+		corsHandler.ServeHTTP(w, r)
+	})
+
 	serverAddr := fmt.Sprintf(":%d", cfg.Server.HTTPPort)
 	srv := &http.Server{
 		Addr:         serverAddr,
-		Handler:      corsHandler,
+		Handler:      subpathHandler,
 		ReadTimeout:  time.Duration(cfg.Server.ReadTimeoutSec) * time.Second,
 		WriteTimeout: time.Duration(cfg.Server.WriteTimeoutSec) * time.Second,
 	}

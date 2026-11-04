@@ -785,6 +785,15 @@
     let allFeedItems = [];
     let countUser = 0, countProject = 0, countSystem = 0;
 
+    // Detect base subpath dynamically (supports root domain, /quick-notify, or any reverse-proxy subpath)
+    function getBasePath() {
+      let p = window.location.pathname || '';
+      // Strip trailing page routes like /admin, /admin.html, /index.html
+      p = p.replace(/\/(admin(\.html)?|index(\.html)?)?\/?$/i, '');
+      return p.replace(/\/+$/, '');
+    }
+    const BASE_PATH = getBasePath();
+
     // Initialize View
     window.addEventListener("DOMContentLoaded", () => {
       if (adminToken) {
@@ -821,7 +830,7 @@
       btn.disabled = true;
       btn.innerText = "Authenticating...";
 
-      fetch("/api/v1/admin/login", {
+      fetch(`${BASE_PATH}/api/v1/admin/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: usernameInput, password: passwordInput })
@@ -861,7 +870,7 @@
     function fetchStats() {
       if (!adminToken) return;
 
-      fetch("/api/v1/admin/stats", {
+      fetch(`${BASE_PATH}/api/v1/admin/stats`, {
         headers: { "Authorization": `Bearer ${adminToken}` }
       })
       .then(res => {
@@ -971,7 +980,7 @@
       btn.disabled = true;
       btn.innerText = "Dispatching...";
 
-      fetch("/api/v1/notify", {
+      fetch(`${BASE_PATH}/api/v1/notify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -1006,7 +1015,7 @@
 
       const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
       const host = window.location.host;
-      const wsUrl = `${protocol}//${host}/ws?token=${encodeURIComponent(adminToken)}`;
+      const wsUrl = `${protocol}//${host}${BASE_PATH}/ws?token=${encodeURIComponent(adminToken)}`;
 
       adminSocket = new WebSocket(wsUrl);
 

@@ -18,6 +18,7 @@ type ServerConfig struct {
 	ReadTimeoutSec  int      `mapstructure:"read_timeout_sec"`
 	WriteTimeoutSec int      `mapstructure:"write_timeout_sec"`
 	AllowedOrigins  []string `mapstructure:"allowed_origins"`
+	BasePath        string   `mapstructure:"base_path"`
 }
 
 // AuthConfig defines authentication parameters.
@@ -104,6 +105,7 @@ func LoadConfig(envPath string) (*AppConfig, error) {
 	cfg.Server.ReadTimeoutSec = getInt(env, "SERVER_READ_TIMEOUT_SEC", 15)
 	cfg.Server.WriteTimeoutSec = getInt(env, "SERVER_WRITE_TIMEOUT_SEC", 15)
 	cfg.Server.AllowedOrigins = getStringSlice(env, "SERVER_ALLOWED_ORIGINS", []string{"*"})
+	cfg.Server.BasePath = strings.TrimSuffix(getString(env, "SERVER_BASE_PATH", ""), "/")
 
 	// --- Auth ---
 	cfg.Auth.JWTSecret = getString(env, "AUTH_JWT_SECRET", "quicknotify_dev_secret_key_2026")

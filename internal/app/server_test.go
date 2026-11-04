@@ -80,4 +80,19 @@ func TestHTTPServer_AdminWorkflow(t *testing.T) {
 	if recStats.Code != http.StatusOK {
 		t.Fatalf("expected HTTP 200 on stats, got %d", recStats.Code)
 	}
+
+	// 4. Test Subpath prefix support (e.g. /quick-notify)
+	reqSubpathRoot := httptest.NewRequest(http.MethodGet, "/quick-notify", nil)
+	recSubpathRoot := httptest.NewRecorder()
+	srv.Handler.ServeHTTP(recSubpathRoot, reqSubpathRoot)
+	if recSubpathRoot.Code != http.StatusOK {
+		t.Fatalf("expected HTTP 200 on subpath /quick-notify, got %d", recSubpathRoot.Code)
+	}
+
+	reqSubpathLogin := httptest.NewRequest(http.MethodPost, "/quick-notify/api/v1/admin/login", bytes.NewReader(loginBody))
+	recSubpathLogin := httptest.NewRecorder()
+	srv.Handler.ServeHTTP(recSubpathLogin, reqSubpathLogin)
+	if recSubpathLogin.Code != http.StatusOK {
+		t.Fatalf("expected HTTP 200 on subpath login /quick-notify/api/v1/admin/login, got %d", recSubpathLogin.Code)
+	}
 }
