@@ -30,8 +30,8 @@ QuickNotify hỗ trợ 2 cơ chế tiếp nhận sự kiện (Inbound Adapters) 
 
 ## 2. KẾT NỐI WEBSOCKET & XÁC THỰC DANH TÍNH (PHÍA FRONTEND)
 
-### 2.1. Yêu cầu về JWT Token (Authentication)
-Mọi kết nối WebSocket đến QuickNotify bắt buộc phải có một chuỗi **JWT Token** hợp lệ được ký bằng thuật toán `HS256` với **Secret Key** chung (`auth.jwt_secret` cấu hình trong QuickNotify).
+### 2.1. Yêu cầu về JWT Token (Authentication & Per-Project Isolation)
+Mọi kết nối WebSocket đến QuickNotify bắt buộc phải có một chuỗi **JWT Token** hợp lệ được ký bằng thuật toán `HS256` với **Secret Key riêng** của dự án (`jwt_secret` trong biến `PROJECT_CREDENTIALS`, hoặc `AUTH_JWT_SECRET` dự phòng). Nhờ cơ chế này các dự án khác hoàn toàn độc lập, không thể giải mã hay giả mạo phiên làm việc của nhau.
 
 Token phải chứa tối thiểu các trường Claims sau:
 ```json
@@ -136,7 +136,10 @@ socket.onerror = (error) => {
 Gửi message vào Kafka topic chung `global-notify-events` với nội dung JSON chuẩn Envelope.
 
 ### Cách 2: Bắn qua HTTP REST API (Gọi trực tiếp)
-Gửi HTTP POST request tới `http://<QUICKNOTIFY_HOST>:8080/api/v1/notify` với Header `Content-Type: application/json`.
+Gửi HTTP POST request tới `http://<QUICKNOTIFY_HOST>:8080/api/v1/notify` với:
+* **Header `Content-Type: application/json`**
+* **Header `X-API-Key: <PROJECT_API_KEY>`** (hoặc `Authorization: Bearer <PROJECT_API_KEY>`) được cấp riêng cho dự án trong `.env` (`PROJECT_CREDENTIALS`).
+* Hệ thống sẽ tự động kiểm tra Anti-Spoofing (`project_id`) và Scope Guard (`user` / `project_global`).
 
 ---
 

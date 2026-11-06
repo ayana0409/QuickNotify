@@ -49,7 +49,7 @@ func initHTTPServer(
 
 	// --- HTTP Inbound Notification Endpoint (REST API) ---
 	// Enables publishing notifications directly over HTTP without requiring Kafka.
-	// Essential for local standalone demo, webhook integrations, and microservices.
+	// Protected by multi-tenant API Key authentication, Anti-Spoofing, and Scope Guard.
 	mux.HandleFunc("/api/v1/notify", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodPost {
 			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -59,6 +59,19 @@ func initHTTPServer(
 		var env domain.NotificationEnvelope
 		if err := json.NewDecoder(r.Body).Decode(&env); err != nil {
 			http.Error(w, fmt.Sprintf("Invalid request payload: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		// Authenticate and authorize API Key & Scope Guard
+		if errMsg, statusCode := authenticateInboundRequest(r, env, cfg); statusCode != http.StatusOK {
+			logger.Warn("Inbound notification rejected by security guard",
+				zap.String("project_id", env.ProjectID),
+				zap.String("scope", string(env.Scope)),
+				zap.Int("status", statusCode),
+				zap.String("reason", errMsg),
+				zap.String("remote_addr", r.RemoteAddr),
+			)
+			http.Error(w, errMsg, statusCode)
 			return
 		}
 
@@ -217,7 +230,9 @@ func initHTTPServer(
 	// Protected by JWT AuthMiddleware; the Handler also validates the request
 	// Origin against the AllowedOrigins whitelist during the WS upgrade.
 	wsHandler := websocket.NewHandler(wsHub, cfg.Server.AllowedOrigins, logger)
-	authMiddleware := websocket.AuthMiddleware(cfg.Auth.JWTSecret, logger)
+	authMiddleware := websocket.AuthMiddlewareWithResolver(func(projectID string) string {
+		return cfg.Projects.GetJWTSecret(projectID, cfg.Auth.JWTSecret)
+	}, logger)
 	mux.Handle("/ws", authMiddleware(wsHandler))
 
 	// --- Wrap the whole mux with CORS and Subpath middleware ---
@@ -255,5 +270,91 @@ func initHTTPServer(
 	}
 
 	return srv
+}
+
+// authenticateInboundRequest checks whether an inbound HTTP notification request is authenticated and authorized.
+// It verifies:
+// 1. API Key existence and status (enabled/disabled).
+// 2. Anti-Spoofing: cred.ProjectID must match env.ProjectID (unless master system key).
+// 3. Scope Guard: cred.HasScope(env.Scope).
+// It also permits valid Admin JWT session tokens with system authority.
+func authenticateInboundRequest(r *http.Request, env domain.NotificationEnvelope, cfg *config.AppConfig) (string, int) {
+	var token string
+	if apiKey := r.Header.Get("X-API-Key"); apiKey != "" {
+		token = strings.TrimSpace(apiKey)
+	} else if authHeader := r.Header.Get("Authorization"); authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && (strings.EqualFold(parts[0], "Bearer") || strings.EqualFold(parts[0], "ApiKey")) {
+			token = strings.TrimSpace(parts[1])
+		} else {
+			token = strings.TrimSpace(authHeader)
+		}
+	}
+
+	// 1. If an Admin JWT session token is provided, validate it
+	if token != "" {
+		if _, ok := validateAdminJWT(token, cfg); ok {
+			return "", http.StatusOK
+		}
+	}
+
+	// 2. If Project Credentials are configured in the system, strictly enforce API Key & Scope Guard
+	if len(cfg.Projects.Projects) > 0 {
+		if token == "" {
+			return "Unauthorized: missing API key (X-API-Key or Authorization header required)", http.StatusUnauthorized
+		}
+
+		cred, found := cfg.Projects.GetByAPIKey(token)
+		if !found {
+			return "Unauthorized: invalid API key", http.StatusUnauthorized
+		}
+
+		if !cred.Enabled {
+			return fmt.Sprintf("Forbidden: API key for project '%s' is disabled", cred.ProjectID), http.StatusForbidden
+		}
+
+		// Layer 2: Anti-Spoofing check
+		if !cred.CanPublishFor(env.ProjectID) {
+			return fmt.Sprintf("Forbidden: API key for project '%s' cannot publish for project '%s'", cred.ProjectID, env.ProjectID), http.StatusForbidden
+		}
+
+		// Layer 3: Scope Guard check
+		if !cred.HasScope(env.Scope) {
+			return fmt.Sprintf("Forbidden: API key for project '%s' is not authorized for scope '%s'", cred.ProjectID, env.Scope), http.StatusForbidden
+		}
+
+		return "", http.StatusOK
+	}
+
+	// 3. Fallback when no projects are configured:
+	// If a token was supplied but failed admin authentication:
+	if token != "" {
+		return "Unauthorized: invalid API key or admin token", http.StatusUnauthorized
+	}
+
+	// Allow unauthenticated when zero project credentials are configured (backward compatibility for basic tests)
+	return "", http.StatusOK
+}
+
+// validateAdminJWT verifies if the given token is a valid Admin session JWT.
+func validateAdminJWT(tokenStr string, cfg *config.AppConfig) (jwt.MapClaims, bool) {
+	secret := cfg.Admin.JWTSecret
+	if secret == "" {
+		secret = cfg.Auth.JWTSecret
+	}
+	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+	if err != nil || !token.Valid {
+		return nil, false
+	}
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok || claims["role"] != "admin" {
+		return nil, false
+	}
+	return claims, true
 }
 

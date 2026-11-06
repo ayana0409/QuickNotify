@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"quicknotify/internal/adapters/outbound/email"
+	"quicknotify/internal/core/domain"
 )
 
 // ServerConfig defines HTTP server settings.
@@ -62,15 +63,51 @@ type RedisConfig struct {
 	Enabled  bool   `mapstructure:"enabled"`
 }
 
+// ProjectRegistry manages tenant/project credentials and provides fast O(1) lookups.
+type ProjectRegistry struct {
+	Projects     []domain.ProjectCredential
+	APIKeyIndex  map[string]domain.ProjectCredential // Key: api_key
+	ProjectIndex map[string]domain.ProjectCredential // Key: project_id (lowercase)
+}
+
+// GetByAPIKey retrieves project credentials by API key.
+func (r *ProjectRegistry) GetByAPIKey(key string) (domain.ProjectCredential, bool) {
+	if r == nil || r.APIKeyIndex == nil {
+		return domain.ProjectCredential{}, false
+	}
+	cred, ok := r.APIKeyIndex[strings.TrimSpace(key)]
+	return cred, ok
+}
+
+// GetByProjectID retrieves project credentials by project ID.
+func (r *ProjectRegistry) GetByProjectID(projectID string) (domain.ProjectCredential, bool) {
+	if r == nil || r.ProjectIndex == nil {
+		return domain.ProjectCredential{}, false
+	}
+	cred, ok := r.ProjectIndex[strings.ToLower(strings.TrimSpace(projectID))]
+	return cred, ok
+}
+
+// GetJWTSecret returns the JWT secret for the given project, falling back to defaultSecret if not found.
+func (r *ProjectRegistry) GetJWTSecret(projectID, defaultSecret string) string {
+	if r != nil && r.ProjectIndex != nil {
+		if cred, ok := r.ProjectIndex[strings.ToLower(strings.TrimSpace(projectID))]; ok && cred.JWTSecret != "" {
+			return cred.JWTSecret
+		}
+	}
+	return defaultSecret
+}
+
 // AppConfig represents the root application configuration.
 type AppConfig struct {
-	Server ServerConfig `mapstructure:"server"`
-	Auth   AuthConfig   `mapstructure:"auth"`
-	Admin  AdminConfig  `mapstructure:"admin"`
-	Email  email.Config `mapstructure:"email"`
-	Kafka  KafkaConfig  `mapstructure:"kafka"`
-	Redis  RedisConfig  `mapstructure:"redis"`
-	Log    LogConfig    `mapstructure:"log"`
+	Server   ServerConfig    `mapstructure:"server"`
+	Auth     AuthConfig      `mapstructure:"auth"`
+	Admin    AdminConfig     `mapstructure:"admin"`
+	Projects ProjectRegistry `mapstructure:"projects"`
+	Email    email.Config    `mapstructure:"email"`
+	Kafka    KafkaConfig     `mapstructure:"kafka"`
+	Redis    RedisConfig     `mapstructure:"redis"`
+	Log      LogConfig       `mapstructure:"log"`
 }
 
 // ClusterConfig represents an individual Kafka cluster.
@@ -109,6 +146,22 @@ func LoadConfig(envPath string) (*AppConfig, error) {
 
 	// --- Auth ---
 	cfg.Auth.JWTSecret = getString(env, "AUTH_JWT_SECRET", "quicknotify_dev_secret_key_2026")
+
+	// --- Project Credentials & Scopes (Multi-Tenancy) ---
+	// PROJECT_CREDENTIALS: JSON array of domain.ProjectCredential
+	projectCredentialsJSON := getString(env, "PROJECT_CREDENTIALS", "")
+	if projectCredentialsJSON != "" {
+		registry, err := parseProjectCredentials(projectCredentialsJSON)
+		if err != nil {
+			return nil, fmt.Errorf("parse PROJECT_CREDENTIALS: %w", err)
+		}
+		cfg.Projects = *registry
+	} else {
+		cfg.Projects = ProjectRegistry{
+			APIKeyIndex:  make(map[string]domain.ProjectCredential),
+			ProjectIndex: make(map[string]domain.ProjectCredential),
+		}
+	}
 
 	// --- Admin Dashboard ---
 	cfg.Admin.Enabled = getBool(env, "ADMIN_ENABLED", true)
@@ -157,6 +210,36 @@ func LoadConfig(envPath string) (*AppConfig, error) {
 	return cfg, nil
 }
 
+// parseProjectCredentials unmarshals PROJECT_CREDENTIALS JSON string and builds fast lookup indices.
+func parseProjectCredentials(jsonStr string) (*ProjectRegistry, error) {
+	s := strings.TrimSpace(jsonStr)
+	if len(s) >= 2 && ((s[0] == '\'' && s[len(s)-1] == '\'') || (s[0] == '"' && s[len(s)-1] == '"')) {
+		s = s[1 : len(s)-1]
+	}
+
+	var creds []domain.ProjectCredential
+	if err := json.Unmarshal([]byte(s), &creds); err != nil {
+		return nil, fmt.Errorf("invalid PROJECT_CREDENTIALS JSON: %w", err)
+	}
+
+	registry := &ProjectRegistry{
+		Projects:     creds,
+		APIKeyIndex:  make(map[string]domain.ProjectCredential, len(creds)),
+		ProjectIndex: make(map[string]domain.ProjectCredential, len(creds)),
+	}
+
+	for _, cred := range creds {
+		if cred.APIKey != "" {
+			registry.APIKeyIndex[strings.TrimSpace(cred.APIKey)] = cred
+		}
+		if cred.ProjectID != "" {
+			registry.ProjectIndex[strings.ToLower(strings.TrimSpace(cred.ProjectID))] = cred
+		}
+	}
+
+	return registry, nil
+}
+
 // LoadConsumersConfig is kept for backward compatibility with tests.
 // When migrated to env-based config, the caller should use AppConfig.Kafka.ConsumersConfig directly.
 func LoadConsumersConfig(_ string) (*ConsumersConfig, error) {
@@ -189,6 +272,7 @@ func parseConsumersConfig(clustersJSON, consumersJSON string) (*ConsumersConfig,
 }
 
 // loadEnvFile reads key=value pairs from a .env file into a map.
+// It supports multi-line values enclosed in quotes (single ' or double ").
 // OS environment variables always take priority over file values.
 func loadEnvFile(envPath string) map[string]string {
 	env := make(map[string]string)
@@ -211,8 +295,34 @@ func loadEnvFile(envPath string) map[string]string {
 			continue
 		}
 		scanner := bufio.NewScanner(f)
+		var currentKey string
+		var currentValue strings.Builder
+		var inMultiline bool
+		var quoteChar byte
+
 		for scanner.Scan() {
-			line := strings.TrimSpace(scanner.Text())
+			rawLine := scanner.Text()
+
+			if inMultiline {
+				trimmed := strings.TrimRight(rawLine, "\r\n")
+				trimmedEnd := strings.TrimSpace(trimmed)
+				if strings.HasSuffix(trimmedEnd, string(quoteChar)) {
+					// Found the closing quote
+					content := trimmed[:strings.LastIndex(trimmed, string(quoteChar))]
+					currentValue.WriteString("\n")
+					currentValue.WriteString(content)
+					env[currentKey] = currentValue.String()
+					inMultiline = false
+					currentKey = ""
+					currentValue.Reset()
+				} else {
+					currentValue.WriteString("\n")
+					currentValue.WriteString(rawLine)
+				}
+				continue
+			}
+
+			line := strings.TrimSpace(rawLine)
 			if line == "" || strings.HasPrefix(line, "#") {
 				continue
 			}
@@ -222,11 +332,27 @@ func loadEnvFile(envPath string) map[string]string {
 			}
 			k := strings.TrimSpace(parts[0])
 			v := strings.TrimSpace(parts[1])
-			// Strip surrounding quotes
-			if len(v) >= 2 && ((v[0] == '"' && v[len(v)-1] == '"') || (v[0] == '\'' && v[len(v)-1] == '\'')) {
-				v = v[1 : len(v)-1]
+
+			// Check if v starts with an opening quote (' or ")
+			if len(v) > 0 && (v[0] == '\'' || v[0] == '"') {
+				q := v[0]
+				// Check if the closing quote is on the same line
+				if len(v) >= 2 && v[len(v)-1] == q {
+					// Single-line quoted string: strip surrounding quotes
+					env[k] = v[1 : len(v)-1]
+				} else {
+					// Multi-line quoted string starts here
+					inMultiline = true
+					quoteChar = q
+					currentKey = k
+					currentValue.WriteString(v[1:])
+				}
+			} else {
+				env[k] = v
 			}
-			env[k] = v
+		}
+		if inMultiline && currentKey != "" {
+			env[currentKey] = currentValue.String()
 		}
 		f.Close()
 		break // Use the first file found

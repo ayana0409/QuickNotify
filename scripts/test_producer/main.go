@@ -18,6 +18,7 @@ import (
 func main() {
 	broker := flag.String("broker", "localhost:9092", "Kafka broker address (e.g. localhost:9092 or localhost:9094)")
 	httpURL := flag.String("http", "", "Direct HTTP endpoint (e.g. http://localhost:8080/api/v1/notify) - bypasses Kafka for local standalone demo")
+	apiKey := flag.String("api-key", "", "API Key for project authorization (e.g. qn_sec_shorterlink_live_9a8b7c6d5e4f or qn_sec_root_master_system_key_2026)")
 	topicType := flag.String("type", "core_user", "Event type to publish: core_user, core_project, core_system, quickbite_created, quickbite_delivering, quickbite_completed, edutrack")
 	projectID := flag.String("project", "quickbite", "Project ID for the notification")
 	userID := flag.String("user", "user_101", "Target User ID")
@@ -172,7 +173,18 @@ func main() {
 		fmt.Printf("Publishing directly over HTTP to: %s\n", *httpURL)
 		fmt.Printf("Payload: %s\n", string(payloadBytes))
 
-		resp, err := http.Post(*httpURL, "application/json", bytes.NewReader(payloadBytes))
+		req, err := http.NewRequest(http.MethodPost, *httpURL, bytes.NewReader(payloadBytes))
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error creating HTTP request: %v\n", err)
+			os.Exit(1)
+		}
+		req.Header.Set("Content-Type", "application/json")
+		if *apiKey != "" {
+			req.Header.Set("X-API-Key", *apiKey)
+			fmt.Printf("Authenticated with API Key: %s\n", *apiKey)
+		}
+
+		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error sending HTTP POST request: %v\n", err)
 			os.Exit(1)

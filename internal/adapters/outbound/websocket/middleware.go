@@ -25,9 +25,24 @@ type AuthClaims struct {
 	jwt.RegisteredClaims
 }
 
-// AuthMiddleware validates JWT authentication for WebSocket handshake requests.
-// It extracts the token from URL queries ("?token="), Sec-WebSocket-Protocol, or Authorization header.
+// SecretResolver is a function that returns the secret key used to verify JWTs for a project.
+type SecretResolver func(projectID string) string
+
+// StaticSecretResolver returns a SecretResolver that always returns the same static secret.
+func StaticSecretResolver(secret string) SecretResolver {
+	return func(_ string) string {
+		return secret
+	}
+}
+
+// AuthMiddleware validates JWT authentication for WebSocket handshake requests using a static secretKey.
 func AuthMiddleware(secretKey string, logger *zap.Logger) func(http.Handler) http.Handler {
+	return AuthMiddlewareWithResolver(StaticSecretResolver(secretKey), logger)
+}
+
+// AuthMiddlewareWithResolver validates JWT authentication for WebSocket handshake requests using dynamic secret resolution.
+// It extracts the token from URL queries ("?token="), Sec-WebSocket-Protocol, or Authorization header.
+func AuthMiddlewareWithResolver(resolver SecretResolver, logger *zap.Logger) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			tokenString := extractToken(r)
@@ -39,7 +54,7 @@ func AuthMiddleware(secretKey string, logger *zap.Logger) func(http.Handler) htt
 				return
 			}
 
-			projectID, userID, err := validateToken(tokenString, secretKey)
+			projectID, userID, err := validateTokenWithResolver(tokenString, resolver)
 			if err != nil {
 				logger.Warn("WebSocket handshake rejected: invalid token",
 					zap.String("remote_addr", r.RemoteAddr),
@@ -87,13 +102,30 @@ func extractToken(r *http.Request) string {
 	return ""
 }
 
-// validateToken parses and verifies the signature and claims of the JWT string.
-func validateToken(tokenString, secretKey string) (projectID, userID string, err error) {
+// validateTokenWithResolver parses and verifies the signature and claims of the JWT string using a dynamic secret resolver.
+func validateTokenWithResolver(tokenString string, resolver SecretResolver) (projectID, userID string, err error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Ensure token signing method is HMAC
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
+
+		var projID string
+		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			if p, okP := claims["project_id"].(string); okP {
+				projID = p
+			}
+		}
+
+		secretKey := resolver(projID)
+		secretKey = strings.TrimSpace(secretKey)
+		if len(secretKey) >= 2 && ((secretKey[0] == '"' && secretKey[len(secretKey)-1] == '"') || (secretKey[0] == '\'' && secretKey[len(secretKey)-1] == '\'')) {
+			secretKey = secretKey[1 : len(secretKey)-1]
+		}
+		if secretKey == "" {
+			return nil, errors.New("no secret key configured for project")
+		}
+
 		return []byte(secretKey), nil
 	})
 
@@ -113,6 +145,11 @@ func validateToken(tokenString, secretKey string) (projectID, userID string, err
 	}
 
 	return pID, uID, nil
+}
+
+// validateToken parses and verifies the signature and claims of the JWT string using a static secretKey.
+func validateToken(tokenString, secretKey string) (projectID, userID string, err error) {
+	return validateTokenWithResolver(tokenString, StaticSecretResolver(secretKey))
 }
 
 // GetAuthInfo retrieves the authenticated ProjectID and UserID from the context.

@@ -199,9 +199,30 @@ SERVER_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:5173,https://*.you
 # Tiền tố đường dẫn nếu deploy sau reverse proxy (ví dụ: /quick-notify)
 SERVER_BASE_PATH=
 
-# ── Xác thực Client (WebSocket JWT) ───────────────────────────────────────────
-# Secret key dùng để kiểm tra chữ ký token JWT từ client frontend gửi lên
+# ── Xác thực Client (WebSocket JWT Fallback) ──────────────────────────────────
+# Secret key dự phòng khi project chưa được khai báo jwt_secret riêng
 AUTH_JWT_SECRET=your-secret-key-must-match-client-backend
+
+# ── Cấu hình API Key, JWT Secret & Scope Guard theo từng Tenant (JSON Array) ───
+# Quản lý phân quyền chặt chẽ: Đúng API Key -> Đúng Project ID -> Đúng Scope cho phép
+PROJECT_CREDENTIALS='[
+  {
+    "project_id": "shorterlink",
+    "name": "ShorterLink Platform",
+    "api_key": "abc",
+    "jwt_secret": "abc",
+    "allowed_scopes": ["user", "project_global"],
+    "enabled": true
+  },
+  {
+    "project_id": "quickbite",
+    "name": "QuickBite Delivery",
+    "api_key": "abc",
+    "jwt_secret": "abc",
+    "allowed_scopes": ["user", "project_global"],
+    "enabled": true
+  },
+]'
 
 # ── Admin Dashboard ────────────────────────────────────────────────────────────
 ADMIN_ENABLED=true
@@ -325,13 +346,18 @@ KAFKA_CONSUMERS='[
 
 ---
 
-### 7.3. Gửi thông báo trực tiếp qua REST API
+### 7.3. Gửi thông báo trực tiếp qua REST API (Bảo vệ bằng API Key & Scope Guard)
 
-Khi kiểm thử nội bộ hoặc khi microservice không dùng Kafka, bạn có thể gọi HTTP POST trực tiếp:
+Khi kiểm thử nội bộ hoặc khi microservice không dùng Kafka, bạn có thể gọi HTTP POST trực tiếp đến `/api/v1/notify`.
+Endpoint này được bảo vệ bởi cơ chế **3-Tier Security Guard**:
+1. **Xác thực API Key**: Truyền qua Header `X-API-Key` hoặc `Authorization: Bearer <API_KEY>`.
+2. **Anti-Spoofing Guard**: API Key của dự án nào chỉ được quyền phát tin cho dự án đó (`project_id`).
+3. **Scope Guard**: Chỉ được phép gửi các scope nằm trong danh sách `allowed_scopes` được cấu hình trong `PROJECT_CREDENTIALS` (chặn gửi `system_global` nếu không có quyền `*`).
 
 ```bash
 curl -X POST http://localhost:8080/api/v1/notify \
   -H "Content-Type: application/json" \
+  -H "X-API-Key: abc" \
   -d '{
     "event_id": "evt_curl_101",
     "project_id": "shorterlink",
@@ -346,8 +372,10 @@ curl -X POST http://localhost:8080/api/v1/notify \
 
 ## 8. KẾT NỐI WEBSOCKET PHÍA CLIENT (FRONTEND)
 
-### Yêu cầu về JWT Token
-Mọi kết nối WebSocket đến `/ws` bắt buộc phải kèm một JWT Token hợp lệ ký bằng thuật toán `HS256` với `AUTH_JWT_SECRET`. 
+### Yêu cầu về JWT Token (Per-Project Secret Isolation)
+Mọi kết nối WebSocket đến `/ws` bắt buộc phải kèm một JWT Token hợp lệ ký bằng thuật toán `HS256`.
+* **Bảo mật cô lập từng dự án (Multi-Tenant Isolation)**: Mỗi dự án được quản lý Secret Key riêng biệt (`jwt_secret` trong `PROJECT_CREDENTIALS`). ShorterLink không thể giả mạo token của QuickBite.
+* **Cơ chế Fallback**: Nếu dự án chưa khai báo secret riêng, QuickNotify tự động dùng `AUTH_JWT_SECRET` làm khóa giải mã dự phòng. 
 
 **Claims của Token:**
 ```json
@@ -421,7 +449,7 @@ QuickNotify tích hợp sẵn giao diện quản trị hiện đại (Glassmorph
 |---|---|---|---|
 | `GET` | `/healthz` | Public | Liveness probe kiểm tra sức khỏe hệ thống (cho Docker/K8s) |
 | `GET` | `/` hoặc `/admin` | Public / Session | Giao diện web Bảng điều khiển quản trị Admin Dashboard |
-| `POST` | `/api/v1/notify` | API Key / Bearer | Tiếp nhận sự kiện thông báo trực tiếp qua giao thức HTTP |
+| `POST` | `/api/v1/notify` | X-API-Key / Admin Bearer | Tiếp nhận sự kiện thông báo qua HTTP (Bảo vệ bởi Anti-Spoofing & Scope Guard) |
 | `POST` | `/api/v1/admin/login` | Public | Đăng nhập tài khoản quản trị Admin và nhận Bearer Token |
 | `GET` | `/api/v1/admin/stats` | Admin Bearer | Thống kê số lượng kết nối, danh sách tenant và cluster status |
 | `GET` | `/ws` | Client JWT | Nâng cấp kết nối HTTP Handshake thành WebSocket duplex |
@@ -442,10 +470,11 @@ go run ./scripts/gen_token/main.go -project shorterlink -user user_101
 ```
 
 ### Công cụ phát sự kiện thử nghiệm (`scripts/test_producer`)
-Bắn thử một thông báo qua HTTP endpoint để kiểm tra luồng nhận:
+Bắn thử một thông báo qua HTTP endpoint (có kèm API Key để xác thực):
 ```bash
 go run ./scripts/test_producer/main.go \
   -http http://localhost:8080/api/v1/notify \
+  -api-key abc \
   -type core_user \
   -project shorterlink \
   -user user_101 \
