@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -293,7 +294,9 @@
       letter-spacing: 0.05em;
     }
 
-    input, select, textarea {
+    input,
+    select,
+    textarea {
       background-color: var(--bg-input);
       border: 1px solid var(--border-color);
       border-radius: 8px;
@@ -305,7 +308,9 @@
       font-family: inherit;
     }
 
-    input:focus, select:focus, textarea:focus {
+    input:focus,
+    select:focus,
+    textarea:focus {
       border-color: var(--border-focus);
       box-shadow: 0 0 0 2px rgba(56, 189, 248, 0.2);
     }
@@ -456,8 +461,15 @@
     }
 
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     .msg-header {
@@ -557,8 +569,349 @@
     .toast.scope-user {
       border-left-color: var(--badge-user);
     }
+
+    /* ========================================= */
+    /* View Navigation Tabs (Live vs Schedules)  */
+    /* ========================================= */
+    .view-tabs {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+    }
+
+    .view-tab-btn {
+      background: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      font-weight: 600;
+      padding: 10px 20px;
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s ease;
+    }
+
+    .view-tab-btn:hover {
+      background-color: var(--bg-card);
+      color: var(--text-primary);
+      border-color: var(--accent-color);
+    }
+
+    .view-tab-btn.active {
+      background: linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(129, 140, 248, 0.15));
+      color: var(--accent-color);
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.2);
+    }
+
+    .tab-pill {
+      background-color: var(--bg-primary);
+      color: var(--text-primary);
+      font-size: 0.75rem;
+      padding: 2px 8px;
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+    }
+
+    /* ========================================= */
+    /* Schedules Table & Card UI                 */
+    /* ========================================= */
+    .schedules-panel {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+    }
+
+    .schedules-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .schedule-table-wrap {
+      overflow-x: auto;
+    }
+
+    .schedule-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      font-size: 0.9rem;
+    }
+
+    .schedule-table th {
+      padding: 12px 16px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border-color);
+      font-weight: 600;
+      text-transform: uppercase;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .schedule-table td {
+      padding: 16px;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.4);
+      vertical-align: middle;
+    }
+
+    .schedule-table tr:hover td {
+      background-color: rgba(255, 255, 255, 0.02);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .status-active {
+      background-color: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .status-paused {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+
+    .badge-timing {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      background-color: rgba(56, 189, 248, 0.1);
+      color: var(--accent-color);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      font-size: 0.8rem;
+      font-family: var(--font-mono);
+    }
+
+    .badge-actions-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background-color: rgba(129, 140, 248, 0.12);
+      color: #a5b4fc;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .table-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-action-sm {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 6px 10px;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: all 0.15s ease;
+    }
+
+    .btn-action-sm:hover {
+      background-color: #334155;
+      border-color: #64748b;
+    }
+
+    .btn-trigger-now {
+      background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #6ee7b7;
+      font-weight: 600;
+    }
+
+    .btn-trigger-now:hover {
+      background: rgba(16, 185, 129, 0.35);
+      border-color: #10b981;
+      color: #fff;
+    }
+
+    .empty-schedules-state {
+      padding: 48px 20px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      color: var(--text-muted);
+    }
+
+    /* ========================================= */
+    /* Multi-Action Schedule Modal               */
+    /* ========================================= */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(6px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 10001;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .modal-dialog {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      width: 100%;
+      max-width: 680px;
+      max-height: 88vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.75);
+      overflow: hidden;
+    }
+
+    #scheduleForm {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+      overflow: hidden;
+    }
+
+    .modal-header {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-shrink: 0;
+    }
+
+    .modal-body {
+      padding: 24px;
+      overflow-y: auto;
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .modal-body::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .modal-body::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+      border-radius: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb {
+      background: var(--border-color);
+      border-radius: 4px;
+    }
+
+    .modal-body::-webkit-scrollbar-thumb:hover {
+      background: var(--accent-color);
+    }
+
+    .modal-footer {
+      padding: 16px 24px;
+      border-top: 1px solid var(--border-color);
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      background-color: rgba(15, 23, 42, 0.75);
+      border-bottom-left-radius: 16px;
+      border-bottom-right-radius: 16px;
+      flex-shrink: 0;
+    }
+
+    input[type="time"],
+    input[type="datetime-local"] {
+      color-scheme: dark;
+    }
+
+    .preset-pill-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .preset-pill {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border-color);
+      color: var(--text-secondary);
+      font-size: 0.78rem;
+      padding: 4px 10px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .preset-pill:hover {
+      border-color: var(--accent-color);
+      color: var(--text-primary);
+      background-color: rgba(56, 189, 248, 0.08);
+    }
+
+    /* Action Step Card inside Multi-Action Builder */
+    .action-step-card {
+      background-color: rgba(11, 17, 32, 0.7);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      position: relative;
+    }
+
+    .action-step-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      padding-bottom: 8px;
+    }
+
+    .step-badge {
+      background: linear-gradient(135deg, #38bdf8, #818cf8);
+      color: #090d16;
+      font-size: 0.75rem;
+      font-weight: 800;
+      padding: 2px 8px;
+      border-radius: 6px;
+    }
   </style>
 </head>
+
 <body>
 
   <!-- ========================================= -->
@@ -651,125 +1004,374 @@
       </div>
     </section>
 
-    <!-- Main Grid: Left Dispatcher, Right Live Feed -->
-    <div class="dashboard-grid">
+    <!-- View Navigation Tabs -->
+    <div class="view-tabs">
+      <button class="view-tab-btn active" id="btnTabLive" onclick="switchView('live')">
+        📡 Bảng Tin & Phát Trực Tiếp
+      </button>
+      <button class="view-tab-btn" id="btnTabSchedules" onclick="switchView('schedules')">
+        ⏰ Lịch Trình Tự Động <span id="badgeScheduleCount" class="tab-pill">0</span>
+      </button>
+    </div>
 
-      <!-- Left Column: Notification Dispatcher Form -->
-      <section class="panel">
-        <div class="panel-header">
-          <div class="panel-title">📢 Dispatch Notification</div>
-          <span style="font-size: 0.75rem; color: var(--text-muted);">Scope-based Routing</span>
-        </div>
+    <!-- VIEW 1: Live Feed & Manual Dispatcher -->
+    <div id="sectionLive">
+      <div class="dashboard-grid">
 
-        <form id="dispatchForm" onsubmit="handleDispatch(event)">
-          <!-- Scope Selection -->
-          <div class="form-group">
-            <label for="scopeSelect">Notification Scope</label>
-            <select id="scopeSelect" onchange="handleScopeChange()">
-              <option value="user">👤 User (Cá nhân - Targeted)</option>
-              <option value="project_global">🏢 Project Global (Toàn bộ người dùng dự án)</option>
-              <option value="system_global">🌐 System Global (Toàn hệ thống - Tất cả dự án)</option>
-            </select>
+        <!-- Left Column: Notification Dispatcher Form -->
+        <section class="panel">
+          <div class="panel-header">
+            <div class="panel-title">📢 Dispatch Notification</div>
+            <span style="font-size: 0.75rem; color: var(--text-muted);">Scope-based Routing</span>
           </div>
 
-          <!-- Project Identifier -->
-          <div class="form-group" id="projectGroup">
-            <label for="projectInput">Target Project (Tenant ID)</label>
-            <input id="projectInput" type="text" list="projectSuggestions" value="shorterlink" placeholder="e.g. shorterlink, quickbite" required>
-            <datalist id="projectSuggestions">
-              <option value="shorterlink">
-              <option value="quickbite">
-              <option value="edutrack">
-              <option value="system">
-            </datalist>
-          </div>
-
-          <!-- Target User Identifier (Conditional on scope=user) -->
-          <div class="form-group" id="userGroup">
-            <label for="userInput">Target User ID</label>
-            <input id="userInput" type="text" value="usr_9988aabb" placeholder="e.g. usr_9988aabb, user_101">
-          </div>
-
-          <!-- Notification Message Content -->
-          <div class="form-group">
-            <label for="messageInput">Message Text</label>
-            <input id="messageInput" type="text" value="ShorterLink: Link của bạn vừa đạt mốc 10,000 lượt click!" placeholder="Type notification message..." required>
-          </div>
-
-          <!-- Priority & Channels -->
-          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <form id="dispatchForm" onsubmit="handleDispatch(event)">
+            <!-- Scope Selection -->
             <div class="form-group">
-              <label for="prioritySelect">Priority</label>
-              <select id="prioritySelect">
-                <option value="normal">Normal</option>
-                <option value="high" selected>High</option>
-                <option value="low">Low</option>
+              <label for="scopeSelect">Phạm vi thông báo</label>
+              <select id="scopeSelect" onchange="handleScopeChange()">
+                <option value="user">Cá nhân</option>
+                <option value="project_global">Dự án</option>
+                <option value="system_global">Hệ thống</option>
               </select>
             </div>
 
+            <!-- Project Identifier -->
+            <div class="form-group" id="projectGroup">
+              <label for="projectInput">Dự án mục tiêu</label>
+              <input id="projectInput" type="text" list="projectSuggestions" value="shorterlink"
+                placeholder="shorterlink, quickbite..." required>
+              <datalist id="projectSuggestions">
+                <option value="shorterlink">
+                <option value="quickbite">
+                <option value="system">
+              </datalist>
+            </div>
+
+            <!-- Target User Identifier (Conditional on scope=user) -->
+            <div class="form-group" id="userGroup">
+              <label for="userInput">Mã người dùng (User ID)</label>
+              <input id="userInput" type="text" value="usr_9988aabb" placeholder="Ví dụ: usr_9988aabb, user_101">
+            </div>
+
+            <!-- Notification Message Content -->
             <div class="form-group">
-              <label>Delivery Channel</label>
-              <div style="display: flex; gap: 12px; margin-top: 8px;">
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                  <input type="checkbox" id="chanWs" checked> WebSocket
-                </label>
-                <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
-                  <input type="checkbox" id="chanEmail"> Email
-                </label>
+              <label for="messageInput">Message Text</label>
+              <input id="messageInput" type="text" value="ShorterLink: Link của bạn vừa đạt mốc 10,000 lượt click!"
+                placeholder="Type notification message..." required>
+            </div>
+
+            <!-- Priority & Channels -->
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+              <div class="form-group">
+                <label for="prioritySelect">Priority</label>
+                <select id="prioritySelect">
+                  <option value="normal">Normal</option>
+                  <option value="high" selected>High</option>
+                  <option value="low">Low</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label>Delivery Channel</label>
+                <div style="display: flex; gap: 12px; margin-top: 8px;">
+                  <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="chanWs" checked> WebSocket
+                  </label>
+                  <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                    <input type="checkbox" id="chanEmail"> Email
+                  </label>
+                </div>
+              </div>
+            </div>
+
+            <!-- Extra JSON Payload (Optional) -->
+            <div class="form-group">
+              <label for="extraJsonInput">Extra Data (Optional JSON)</label>
+              <textarea id="extraJsonInput" placeholder='{"link_id": "lnk_123", "clicks": 10000}'></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" id="dispatchBtn" style="width: 100%; margin-top: 6px;">
+              🚀 Send Notification Now
+            </button>
+          </form>
+
+          <!-- Connected Tenants Inspector -->
+          <div style="margin-top: 8px;">
+            <div class="panel-header" style="padding-bottom: 8px; margin-bottom: 8px;">
+              <span style="font-size: 0.85rem; font-weight: 700;">Active Tenants Online</span>
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;"
+                onclick="fetchStats()">Refresh</button>
+            </div>
+            <div id="tenantListContainer" class="tenant-list">
+              <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 12px;">
+                No clients currently connected.
               </div>
             </div>
           </div>
+        </section>
 
-          <!-- Extra JSON Payload (Optional) -->
-          <div class="form-group">
-            <label for="extraJsonInput">Extra Data (Optional JSON)</label>
-            <textarea id="extraJsonInput" placeholder='{"link_id": "lnk_123", "clicks": 10000}'></textarea>
-          </div>
-
-          <!-- Submit Button -->
-          <button type="submit" id="dispatchBtn" style="width: 100%; margin-top: 6px;">
-            🚀 Send Notification Now
-          </button>
-        </form>
-
-        <!-- Connected Tenants Inspector -->
-        <div style="margin-top: 8px;">
-          <div class="panel-header" style="padding-bottom: 8px; margin-bottom: 8px;">
-            <span style="font-size: 0.85rem; font-weight: 700;">Active Tenants Online</span>
-            <button class="btn-secondary" style="font-size: 0.75rem; padding: 4px 8px;" onclick="fetchStats()">Refresh</button>
-          </div>
-          <div id="tenantListContainer" class="tenant-list">
-            <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 12px;">
-              No clients currently connected.
+        <!-- Right Column: Realtime Feed & System Monitor -->
+        <section class="panel feed-container">
+          <div class="feed-filter-bar">
+            <div class="filter-tabs">
+              <button class="tab-btn active" onclick="setFilter('all')">Tất cả (<span id="countAll">0</span>)</button>
+              <button class="tab-btn" onclick="setFilter('user')">Cá nhân (<span id="countUser">0</span>)</button>
+              <button class="tab-btn" onclick="setFilter('project_global')">Dự án (<span
+                  id="countProject">0</span>)</button>
+              <button class="tab-btn" onclick="setFilter('system_global')">Hệ thống (<span
+                  id="countSystem">0</span>)</button>
+            </div>
+            <div class="btn-row">
+              <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="clearFeed()">Clear
+                Feed</button>
             </div>
           </div>
+
+          <div id="feedList" class="feed-list">
+            <div
+              style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 6px;">
+              <span>Realtime notification feed will stream here.</span>
+              <span style="font-size: 0.8rem;">Listening for live events across all connected projects.</span>
+            </div>
+          </div>
+        </section>
+
+      </div>
+    </div>
+
+    <!-- VIEW 2: Scheduled Workers Management -->
+    <div id="sectionSchedules" style="display: none;">
+      <section class="schedules-panel">
+        <div class="schedules-header-row">
+          <div>
+            <h2
+              style="font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 8px;">
+              ⏰ Quản Lý Lịch Trình Thông Báo
+            </h2>
+            <p style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">
+              Thiết lập kịch bản tự động gửi thông báo theo giờ, theo chu kỳ lặp lại hoặc hẹn giờ một lần cho
+              ShorterLink và toàn hệ thống.
+            </p>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <button class="btn-secondary" style="font-size: 0.85rem; padding: 8px 14px;" onclick="fetchSchedules()">
+              🔄 Làm Mới
+            </button>
+            <button style="font-size: 0.85rem; padding: 8px 18px;" onclick="openScheduleModal()">
+              ➕ Thiết Lập Lịch Mới
+            </button>
+          </div>
+        </div>
+
+        <div class="schedule-table-wrap">
+          <table class="schedule-table">
+            <thead>
+              <tr>
+                <th style="width: 24%;">Tên Lịch Trình</th>
+                <th style="width: 18%;">Kiểu Chạy</th>
+                <th style="width: 20%;">Lần Chạy Kế Tiếp</th>
+                <th style="width: 12%;">Các Bước</th>
+                <th style="width: 12%;">Trạng Thái</th>
+                <th style="width: 14%; text-align: right;">Thao Tác</th>
+              </tr>
+            </thead>
+            <tbody id="schedulesTableBody">
+              <!-- Rendered dynamically -->
+            </tbody>
+          </table>
+
+          <div id="schedulesEmptyState" class="empty-schedules-state" style="display: none;">
+            <div style="font-size: 2.5rem; opacity: 0.6;">⏰</div>
+            <div style="font-size: 1rem; font-weight: 600; color: var(--text-primary);">Chưa có lịch trình tự động nào
+            </div>
+            <div style="font-size: 0.85rem; max-width: 440px;">
+              Mỗi lịch trình có thể chứa một hoặc nhiều bước gửi thông báo tự động tới ShorterLink, QuickBite hoặc toàn
+              hệ thống.
+            </div>
+            <button style="margin-top: 8px; font-size: 0.85rem;" onclick="openScheduleModal()">
+              ➕ Tạo Lịch Đầu Tiên
+            </button>
+          </div>
         </div>
       </section>
-
-      <!-- Right Column: Realtime Feed & System Monitor -->
-      <section class="panel feed-container">
-        <div class="feed-filter-bar">
-          <div class="filter-tabs">
-            <button class="tab-btn active" onclick="setFilter('all')">All (<span id="countAll">0</span>)</button>
-            <button class="tab-btn" onclick="setFilter('user')">User (<span id="countUser">0</span>)</button>
-            <button class="tab-btn" onclick="setFilter('project_global')">Project (<span id="countProject">0</span>)</button>
-            <button class="tab-btn" onclick="setFilter('system_global')">System (<span id="countSystem">0</span>)</button>
-          </div>
-          <div class="btn-row">
-            <button class="btn-secondary" style="font-size: 0.75rem; padding: 6px 10px;" onclick="clearFeed()">Clear Feed</button>
-          </div>
-        </div>
-
-        <div id="feedList" class="feed-list">
-          <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: var(--text-muted); gap: 6px;">
-            <span>Realtime notification feed will stream here.</span>
-            <span style="font-size: 0.8rem;">Listening for live events across all connected projects.</span>
-          </div>
-        </div>
-      </section>
-
     </div>
   </main>
+
+  <!-- Modal: Tạo / Chỉnh sửa lịch trình -->
+  <div id="scheduleModal" class="modal-overlay">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <div style="font-size: 1.15rem; font-weight: 700; color: var(--text-primary);" id="modalScheduleTitle">
+          Thiết Lập Lịch Trình Mới
+        </div>
+        <button type="button" class="btn-action-sm" style="font-size: 1.1rem; padding: 4px 10px; cursor: pointer;"
+          onclick="closeScheduleModal()">✕</button>
+      </div>
+
+      <form id="scheduleForm" onsubmit="handleSaveSchedule(event)">
+        <div class="modal-body">
+          <input type="hidden" id="schedEditId">
+          <input type="hidden" id="schedExpr" value="0 8 * * *">
+
+          <!-- Tên và Mô tả -->
+          <div class="form-group">
+            <label for="schedName">Tên lịch trình <span style="color: var(--danger-color);">*</span></label>
+            <input id="schedName" type="text" placeholder="Ví dụ: Báo cáo số liệu buổi sáng, Nhắc nhở định kỳ..."
+              required>
+          </div>
+
+          <div class="form-group">
+            <label for="schedDesc">Ghi chú mục đích (tùy chọn)</label>
+            <input id="schedDesc" type="text" placeholder="Ghi chú thêm về kịch bản hoặc chiến dịch thông báo này...">
+          </div>
+
+          <!-- Kiểu chạy -->
+          <div class="form-group">
+            <label for="schedTypeSelect">Hình thức chạy lịch</label>
+            <select id="schedTypeSelect" onchange="handleSchedTypeChange()">
+              <option value="cron">Định kỳ theo giờ / ngày</option>
+              <option value="interval">Lặp lại sau mỗi khoảng thời gian</option>
+              <option value="once">Gửi một lần duy nhất vào ngày giờ cụ thể</option>
+            </select>
+          </div>
+
+          <!-- UI Thời Gian: Kiểu 1 - Định kỳ Cron -->
+          <div id="uiCronConfig"
+            style="display: flex; flex-direction: column; gap: 12px; background: rgba(11, 17, 32, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <div class="form-group" style="flex: 1; min-width: 180px;">
+                <label for="cronFrequencySelect">Tần suất</label>
+                <select id="cronFrequencySelect" onchange="updateCronExprFromUI()">
+                  <option value="daily">Hàng ngày</option>
+                  <option value="weekdays">Thứ Hai đến Thứ Sáu (Ngày làm việc)</option>
+                  <option value="weekly">Một ngày cố định trong tuần</option>
+                  <option value="hourly">Đầu mỗi giờ</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="cronDayGroup" style="flex: 1; min-width: 150px; display: none;">
+                <label for="cronDaySelect">Vào ngày trong tuần</label>
+                <select id="cronDaySelect" onchange="updateCronExprFromUI()">
+                  <option value="1">Thứ Hai</option>
+                  <option value="2">Thứ Ba</option>
+                  <option value="3">Thứ Tư</option>
+                  <option value="4">Thứ Năm</option>
+                  <option value="5">Thứ Sáu</option>
+                  <option value="6">Thứ Bảy</option>
+                  <option value="0">Chủ Nhật</option>
+                </select>
+              </div>
+
+              <div class="form-group" id="cronTimeGroup" style="flex: 1; min-width: 150px;">
+                <label for="cronTimeInput">Giờ gửi</label>
+                <input type="time" id="cronTimeInput" value="08:00" onchange="updateCronExprFromUI()"
+                  style="height: 38px;">
+              </div>
+            </div>
+
+            <div id="cronQuickChips" style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Gợi ý giờ:</span>
+              <button type="button" class="preset-pill" onclick="setCronTime('08:00')">08:00 Sáng</button>
+              <button type="button" class="preset-pill" onclick="setCronTime('12:00')">12:00 Trưa</button>
+              <button type="button" class="preset-pill" onclick="setCronTime('17:30')">17:30 Chiều</button>
+              <button type="button" class="preset-pill" onclick="setCronTime('20:00')">20:00 Tối</button>
+            </div>
+
+            <div id="cronHumanDesc"
+              style="font-size: 0.85rem; color: var(--accent-color); font-weight: 500; background: rgba(56, 189, 248, 0.08); padding: 8px 12px; border-radius: 6px;">
+              Chạy vào lúc 08:00 mỗi ngày
+            </div>
+          </div>
+
+          <!-- UI Thời Gian: Kiểu 2 - Interval (Chu kỳ) -->
+          <div id="uiIntervalConfig"
+            style="display: none; flex-direction: column; gap: 12px; background: rgba(11, 17, 32, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div style="display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap;">
+              <div class="form-group" style="flex: 1; min-width: 120px;">
+                <label for="intervalValueInput">Khoảng cách mỗi lần chạy</label>
+                <input type="number" id="intervalValueInput" min="1" max="1440" value="15"
+                  oninput="updateIntervalExprFromUI()">
+              </div>
+              <div class="form-group" style="flex: 1; min-width: 140px;">
+                <label for="intervalUnitSelect">Đơn vị thời gian</label>
+                <select id="intervalUnitSelect" onchange="updateIntervalExprFromUI()">
+                  <option value="m">Phút</option>
+                  <option value="h">Giờ</option>
+                  <option value="s">Giây</option>
+                </select>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <span style="font-size: 0.75rem; color: var(--text-muted);">Gợi ý nhanh:</span>
+              <button type="button" class="preset-pill" onclick="setIntervalVal(15, 'm')">15 phút</button>
+              <button type="button" class="preset-pill" onclick="setIntervalVal(30, 'm')">30 phút</button>
+              <button type="button" class="preset-pill" onclick="setIntervalVal(1, 'h')">1 giờ</button>
+              <button type="button" class="preset-pill" onclick="setIntervalVal(2, 'h')">2 giờ</button>
+            </div>
+
+            <div id="intervalHumanDesc"
+              style="font-size: 0.85rem; color: var(--accent-color); font-weight: 500; background: rgba(56, 189, 248, 0.08); padding: 8px 12px; border-radius: 6px;">
+              Chạy lặp lại sau mỗi 15 phút
+            </div>
+          </div>
+
+          <!-- UI Thời Gian: Kiểu 3 - Once (1 lần duy nhất) -->
+          <div id="uiOnceConfig"
+            style="display: none; flex-direction: column; gap: 12px; background: rgba(11, 17, 32, 0.6); padding: 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+            <div class="form-group">
+              <label for="onceDateTimeInput">Chọn ngày và giờ chạy</label>
+              <input type="datetime-local" id="onceDateTimeInput" onchange="updateOnceExprFromUI()"
+                style="height: 38px;">
+            </div>
+
+            <div id="onceHumanDesc"
+              style="font-size: 0.85rem; color: var(--accent-color); font-weight: 500; background: rgba(56, 189, 248, 0.08); padding: 8px 12px; border-radius: 6px;">
+              Chọn thời điểm để hẹn giờ gửi
+            </div>
+          </div>
+
+          <!-- Chế độ chạy các bước -->
+          <div class="form-group">
+            <label for="schedExecMode">Thứ tự thực hiện các bước</label>
+            <select id="schedExecMode">
+              <option value="sequential">Chạy lần lượt từng bước (hỗ trợ thời gian chờ giữa các bước)</option>
+              <option value="parallel">Chạy đồng loạt tất cả các bước cùng lúc</option>
+            </select>
+          </div>
+
+          <!-- Multi-Action Builder -->
+          <div style="border-top: 1px solid var(--border-color); padding-top: 16px; margin-top: 8px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+              <div>
+                <div style="font-size: 0.95rem; font-weight: 700; color: var(--text-primary);">
+                  Danh Sách Các Bước Thông Báo
+                </div>
+                <div style="font-size: 0.75rem; color: var(--text-muted);">
+                  Mỗi lịch có thể thực hiện nhiều hành động gửi tin liên tiếp hoặc đồng thời
+                </div>
+              </div>
+              <button type="button" class="btn-action-sm" onclick="addActionStep()">
+                + Thêm Bước Mới
+              </button>
+            </div>
+
+            <div id="actionStepsContainer" style="display: flex; flex-direction: column; gap: 14px;">
+              <!-- Action step cards inserted here dynamically -->
+            </div>
+          </div>
+
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" onclick="closeScheduleModal()">Hủy</button>
+          <button type="submit" id="btnSaveSchedule">Lưu Lịch Trình</button>
+        </div>
+      </form>
+    </div>
+  </div>
 
   <!-- Popup Toast Notification Container -->
   <div id="toast-container"></div>
@@ -784,6 +1386,8 @@
     let activeFilter = 'all';
     let allFeedItems = [];
     let countUser = 0, countProject = 0, countSystem = 0;
+    let currentView = 'live';
+    let schedulesCache = [];
 
     // Detect base subpath dynamically (supports root domain, /quick-notify, or any reverse-proxy subpath)
     function getBasePath() {
@@ -813,8 +1417,14 @@
       document.getElementById("loginModal").style.display = "none";
       document.getElementById("adminUserDisplay").innerText = adminUsername;
       fetchStats();
+      fetchSchedules();
       if (pollInterval) clearInterval(pollInterval);
-      pollInterval = setInterval(fetchStats, 4000);
+      pollInterval = setInterval(() => {
+        fetchStats();
+        if (currentView === 'schedules') {
+          fetchSchedules();
+        }
+      }, 4000);
       connectAdminWebSocket();
     }
 
@@ -835,27 +1445,27 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: usernameInput, password: passwordInput })
       })
-      .then(res => {
-        if (!res.ok) {
-          throw new Error("Invalid username or password");
-        }
-        return res.json();
-      })
-      .then(data => {
-        adminToken = data.token;
-        adminUsername = data.username;
-        localStorage.setItem("qn_admin_token", adminToken);
-        localStorage.setItem("qn_admin_user", adminUsername);
-        showDashboard();
-      })
-      .catch(err => {
-        errorBox.innerText = err.message;
-        errorBox.style.display = "block";
-      })
-      .finally(() => {
-        btn.disabled = false;
-        btn.innerText = "🔐 Sign In to Control Panel";
-      });
+        .then(res => {
+          if (!res.ok) {
+            throw new Error("Invalid username or password");
+          }
+          return res.json();
+        })
+        .then(data => {
+          adminToken = data.token;
+          adminUsername = data.username;
+          localStorage.setItem("qn_admin_token", adminToken);
+          localStorage.setItem("qn_admin_user", adminUsername);
+          showDashboard();
+        })
+        .catch(err => {
+          errorBox.innerText = err.message;
+          errorBox.style.display = "block";
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerText = "🔐 Sign In to Control Panel";
+        });
     }
 
     // Logout Handler
@@ -873,47 +1483,64 @@
       fetch(`${BASE_PATH}/api/v1/admin/stats`, {
         headers: { "Authorization": `Bearer ${adminToken}` }
       })
-      .then(res => {
-        if (res.status === 401) {
-          handleLogout();
-          throw new Error("Session expired");
-        }
-        return res.json();
-      })
-      .then(data => {
-        document.getElementById("metricWsCount").innerText = data.ws_connections;
-        const tenants = data.tenants || [];
-        document.getElementById("metricTenantCount").innerText = tenants.length;
+        .then(res => {
+          if (res.status === 401) {
+            handleLogout();
+            throw new Error("Session expired");
+          }
+          return res.json();
+        })
+        .then(data => {
+          document.getElementById("metricWsCount").innerText = data.ws_connections;
+          const tenants = data.tenants || [];
+          document.getElementById("metricTenantCount").innerText = tenants.length;
 
-        // Render Tenants
-        const tenantContainer = document.getElementById("tenantListContainer");
-        const suggestionList = document.getElementById("projectSuggestions");
+          // Store configured projects loaded from environment (.env)
+          if (data.configured_projects && Array.isArray(data.configured_projects)) {
+            window.configuredProjects = data.configured_projects;
+          }
 
-        if (tenants.length === 0) {
-          tenantContainer.innerHTML = `
+          // Render Tenants
+          const tenantContainer = document.getElementById("tenantListContainer");
+          const suggestionList = document.getElementById("projectSuggestions");
+
+          if (tenants.length === 0) {
+            tenantContainer.innerHTML = `
             <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; padding: 12px;">
-              No clients currently connected.
+              Chưa có kết nối client nào đang hoạt động.
             </div>`;
-          document.getElementById("metricTenantList").innerText = "No active projects";
-        } else {
-          document.getElementById("metricTenantList").innerText = tenants.map(t => t.project_id).join(", ");
-          tenantContainer.innerHTML = tenants.map(t => `
+            document.getElementById("metricTenantList").innerText = "Chưa có dự án nào kết nối";
+          } else {
+            document.getElementById("metricTenantList").innerText = tenants.map(t => t.project_id).join(", ");
+            tenantContainer.innerHTML = tenants.map(t => `
             <div class="tenant-item">
-              <span class="tenant-name">🏢 ${escapeHtml(t.project_id)}</span>
+              <span class="tenant-name">${escapeHtml(t.project_id)}</span>
               <span style="font-size: 0.75rem; color: var(--text-secondary);">
-                <strong>${t.user_count}</strong> users &bull; <strong>${t.session_count}</strong> active tabs
+                <strong>${t.user_count}</strong> người dùng &bull; <strong>${t.session_count}</strong> kết nối
               </span>
             </div>
           `).join('');
+          }
 
-          // Update datalist suggestions dynamically
-          suggestionList.innerHTML = tenants.map(t => `<option value="${escapeHtml(t.project_id)}">`).join('') +
-            `<option value="shorterlink"><option value="quickbite"><option value="system">`;
-        }
-      })
-      .catch(err => {
-        console.warn("Failed to fetch admin stats:", err);
-      });
+          // Populate datalist suggestions from configured projects + connected tenants
+          const allKnownProjects = new Map();
+          if (window.configuredProjects) {
+            window.configuredProjects.forEach(p => allKnownProjects.set(p.project_id, p.name || p.project_id));
+          }
+          tenants.forEach(t => {
+            if (!allKnownProjects.has(t.project_id)) {
+              allKnownProjects.set(t.project_id, t.project_id);
+            }
+          });
+          if (suggestionList) {
+            suggestionList.innerHTML = Array.from(allKnownProjects.entries())
+              .map(([pid, name]) => `<option value="${escapeHtml(pid)}">${escapeHtml(name)}</option>`)
+              .join('');
+          }
+        })
+        .catch(err => {
+          console.warn("Failed to fetch admin stats:", err);
+        });
     }
 
     // Scope Form Dynamics
@@ -988,24 +1615,24 @@
         },
         body: JSON.stringify(payload)
       })
-      .then(res => {
-        if (!res.ok) return res.text().then(t => { throw new Error(t); });
-        return res.json();
-      })
-      .then(data => {
-        totalDispatched++;
-        document.getElementById("metricEventCount").innerText = totalDispatched;
-        showToast(payload);
-        // Feed update
-        addFeedItem(payload);
-      })
-      .catch(err => {
-        alert("Failed to dispatch notification: " + err.message);
-      })
-      .finally(() => {
-        btn.disabled = false;
-        btn.innerText = "🚀 Send Notification Now";
-      });
+        .then(res => {
+          if (!res.ok) return res.text().then(t => { throw new Error(t); });
+          return res.json();
+        })
+        .then(data => {
+          totalDispatched++;
+          document.getElementById("metricEventCount").innerText = totalDispatched;
+          showToast(payload);
+          // Feed update
+          addFeedItem(payload);
+        })
+        .catch(err => {
+          alert("Failed to dispatch notification: " + err.message);
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.innerText = "🚀 Send Notification Now";
+        });
     }
 
     // WebSocket Stream Connection for Admin Monitor
@@ -1139,7 +1766,722 @@
       if (!str) return "";
       return String(str).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
     }
+
+    // =========================================
+    // View Switcher (Live vs Schedules)
+    // =========================================
+    function switchView(view) {
+      currentView = view;
+      const tabLive = document.getElementById("btnTabLive");
+      const tabSched = document.getElementById("btnTabSchedules");
+      const secLive = document.getElementById("sectionLive");
+      const secSched = document.getElementById("sectionSchedules");
+
+      if (view === 'schedules') {
+        tabLive.classList.remove("active");
+        tabSched.classList.add("active");
+        secLive.style.display = "none";
+        secSched.style.display = "block";
+        fetchSchedules();
+      } else {
+        tabSched.classList.remove("active");
+        tabLive.classList.add("active");
+        secSched.style.display = "none";
+        secLive.style.display = "block";
+      }
+    }
+
+    // =========================================
+    // Schedules API & Table Rendering
+    // =========================================
+    function fetchSchedules() {
+      if (!adminToken) return;
+
+      fetch(`${BASE_PATH}/api/v1/schedules`, {
+        headers: { "Authorization": `Bearer ${adminToken}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Failed to load schedules");
+          return res.json();
+        })
+        .then(schedules => {
+          schedulesCache = schedules || [];
+          document.getElementById("badgeScheduleCount").innerText = schedulesCache.length;
+          renderSchedulesTable(schedulesCache);
+        })
+        .catch(err => {
+          console.error("fetchSchedules error:", err);
+        });
+    }
+
+    function renderSchedulesTable(schedules) {
+      const tbody = document.getElementById("schedulesTableBody");
+      const emptyState = document.getElementById("schedulesEmptyState");
+
+      if (!schedules || schedules.length === 0) {
+        tbody.innerHTML = "";
+        emptyState.style.display = "flex";
+        return;
+      }
+
+      emptyState.style.display = "none";
+      tbody.innerHTML = schedules.map(s => {
+        const isEnabled = s.enabled !== false;
+        const statusHtml = isEnabled
+          ? `<span class="status-pill status-active">Đang hoạt động</span>`
+          : `<span class="status-pill status-paused">Tạm dừng</span>`;
+
+        const timingHtml = formatScheduleTiming(s);
+        const nextRunHtml = formatScheduleNextRun(s);
+        const actionCount = (s.actions && s.actions.length) || 0;
+
+        return `
+          <tr>
+            <td>
+              <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">
+                ${escapeHtml(s.name)}
+              </div>
+              ${s.description ? `<div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">${escapeHtml(s.description)}</div>` : ''}
+              <div style="font-size: 0.75rem; color: var(--accent-color); margin-top: 4px; font-family: var(--font-mono);">
+                Dự án: ${escapeHtml(s.owner_project_id || 'system')}
+              </div>
+            </td>
+            <td>${timingHtml}</td>
+            <td>${nextRunHtml}</td>
+            <td>
+              <span class="badge-actions-count">${actionCount} bước</span>
+            </td>
+            <td>${statusHtml}</td>
+            <td style="text-align: right;">
+              <div class="table-actions" style="justify-content: flex-end;">
+                <button class="btn-action-sm btn-trigger-now" title="Bắn thông báo ngay lập tức để thử nghiệm" onclick="triggerSchedule('${s.id}', '${escapeHtml(s.name)}')">
+                  Chạy thử
+                </button>
+                <button class="btn-action-sm" title="${isEnabled ? 'Tạm dừng lịch này' : 'Bật lại lịch này'}" onclick="toggleSchedule('${s.id}')">
+                  ${isEnabled ? '▢' : '▶'}
+                </button>
+                <button class="btn-action-sm" title="Chỉnh sửa nội dung và các bước" onclick="openScheduleModal('${s.id}')">
+                  Sửa
+                </button>
+                <button class="btn-action-sm" style="color: var(--danger-color);" title="Xóa lịch trình này" onclick="deleteSchedule('${s.id}', '${escapeHtml(s.name)}')">
+                  Xóa
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function formatScheduleTiming(sched) {
+      if (sched.type === 'interval') {
+        const match = sched.expression ? sched.expression.match(/^(\d+)([smh])$/i) : null;
+        if (match) {
+          const unitNames = { "s": "giây", "m": "phút", "h": "giờ" };
+          return `<span class="badge-timing">Mỗi ${match[1]} ${unitNames[match[2].toLowerCase()] || match[2]}</span>`;
+        }
+        return `<span class="badge-timing">Mỗi ${escapeHtml(sched.expression)}</span>`;
+      }
+      if (sched.type === 'once') {
+        const d = new Date(sched.expression);
+        const str = isNaN(d.getTime()) ? sched.expression : `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')} ngày ${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+        return `<span class="badge-timing">1 lần: ${str}</span>`;
+      }
+      // Cron
+      const parts = (sched.expression || '').trim().split(/\s+/);
+      if (parts.length >= 5) {
+        const min = String(parseInt(parts[0], 10) || 0).padStart(2, '0');
+        const hr = String(parseInt(parts[1], 10) || 0).padStart(2, '0');
+        const dow = parts[4];
+        if (parts[1] === '*' && parts[0] === '0') {
+          return `<span class="badge-timing">Đầu mỗi giờ</span>`;
+        }
+        if (dow === '1-5') {
+          return `<span class="badge-timing">${hr}:${min} Thứ 2 - Thứ 6</span>`;
+        }
+        if (['0', '1', '2', '3', '4', '5', '6'].includes(dow)) {
+          const dayNames = { "1": "Thứ Hai", "2": "Thứ Ba", "3": "Thứ Tư", "4": "Thứ Năm", "5": "Thứ Sáu", "6": "Thứ Bảy", "0": "Chủ Nhật" };
+          return `<span class="badge-timing">${hr}:${min} mỗi ${dayNames[dow]}</span>`;
+        }
+        return `<span class="badge-timing">${hr}:${min} hàng ngày</span>`;
+      }
+      return `<span class="badge-timing">${escapeHtml(sched.expression)}</span>`;
+    }
+
+    function formatScheduleNextRun(sched) {
+      if (!sched.enabled) {
+        return `<span style="font-size: 0.8rem; color: var(--text-muted);">Đã tạm dừng</span>`;
+      }
+      if (!sched.next_run_at) {
+        if (sched.type === 'once') {
+          return `<span style="font-size: 0.8rem; color: var(--text-muted);">Đã chạy hoàn tất</span>`;
+        }
+        return `<span style="font-size: 0.8rem; color: var(--text-muted);">Chưa xác định</span>`;
+      }
+
+      const nextDate = new Date(sched.next_run_at);
+      const now = new Date();
+      const diffMs = nextDate - now;
+
+      if (diffMs <= 0) {
+        return `<span style="font-size: 0.8rem; color: #34d399; font-weight: 600;">Đang chuẩn bị chạy...</span>`;
+      }
+
+      const diffMins = Math.round(diffMs / 60000);
+      let relativeStr = '';
+      if (diffMins < 60) {
+        relativeStr = `(sau ${diffMins} phút)`;
+      } else if (diffMins < 1440) {
+        relativeStr = `(sau ${Math.round(diffMins / 60)} giờ)`;
+      } else {
+        relativeStr = `(sau ${Math.round(diffMins / 1440)} ngày)`;
+      }
+
+      return `
+        <div style="font-size: 0.85rem; color: var(--text-primary); font-weight: 600;">
+          ${nextDate.toLocaleTimeString('vi-VN')}
+        </div>
+        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 2px;">
+          ${nextDate.toLocaleDateString('vi-VN')} ${relativeStr}
+        </div>
+      `;
+    }
+
+    // =========================================
+    // Schedule Actions: Trigger, Toggle, Delete
+    // =========================================
+    function triggerSchedule(id, name) {
+      if (!confirm(`Bạn có muốn kích hoạt chạy thử lịch trình "${name}" ngay bây giờ không?`)) {
+        return;
+      }
+
+      fetch(`${BASE_PATH}/api/v1/schedules/${id}/trigger`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${adminToken}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Kích hoạt thất bại");
+          return res.json();
+        })
+        .then(data => {
+          showToast({
+            project_id: "LỊCH TRÌNH",
+            scope: "system_global",
+            content: { data: { message: `⚡ Đã kích hoạt thành công: "${name}"! Thông báo đã được gửi tới người nhận.` } }
+          });
+          fetchSchedules();
+        })
+        .catch(err => {
+          alert("Lỗi: " + err.message);
+        });
+    }
+
+    function toggleSchedule(id) {
+      fetch(`${BASE_PATH}/api/v1/schedules/${id}/toggle`, {
+        method: "POST",
+        headers: { "Authorization": `Bearer ${adminToken}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Thay đổi trạng thái thất bại");
+          return res.json();
+        })
+        .then(updated => {
+          const msg = updated.enabled ? "Đã bật lại lịch trình hoạt động" : "Đã tạm dừng lịch trình";
+          showToast({
+            project_id: "HỆ THỐNG",
+            scope: "project_global",
+            content: { data: { message: msg } }
+          });
+          fetchSchedules();
+        })
+        .catch(err => {
+          alert("Lỗi: " + err.message);
+        });
+    }
+
+    function deleteSchedule(id, name) {
+      if (!confirm(`Bạn có chắc chắn muốn xóa lịch trình "${name}" không? Thao tác này không thể hoàn tác.`)) {
+        return;
+      }
+
+      fetch(`${BASE_PATH}/api/v1/schedules/${id}`, {
+        method: "DELETE",
+        headers: { "Authorization": `Bearer ${adminToken}` }
+      })
+        .then(res => {
+          if (!res.ok) throw new Error("Xóa lịch trình thất bại");
+          return res.json();
+        })
+        .then(() => {
+          showToast({
+            project_id: "HỆ THỐNG",
+            scope: "system_global",
+            content: { data: { message: `Đã xóa lịch trình "${name}" thành công.` } }
+          });
+          fetchSchedules();
+        })
+        .catch(err => {
+          alert("Lỗi: " + err.message);
+        });
+    }
+
+    // =========================================
+    // Schedule Modal & Multi-Action Builder
+    // =========================================
+
+    function renderProjectOptions(selectedProjectId) {
+      const projects = (window.configuredProjects && window.configuredProjects.length > 0)
+        ? window.configuredProjects
+        : [
+          { project_id: 'shorterlink', name: 'ShorterLink Platform' },
+          { project_id: 'quickbite', name: 'QuickBite Delivery' }
+        ];
+
+      let hasSelected = projects.some(p => p.project_id === selectedProjectId);
+      let html = '';
+      if (selectedProjectId && !hasSelected && selectedProjectId !== 'system') {
+        html += `<option value="${escapeHtml(selectedProjectId)}" selected>${escapeHtml(selectedProjectId)}</option>`;
+      }
+
+      projects.forEach(p => {
+        const isSel = (p.project_id === selectedProjectId) || (!selectedProjectId && p.project_id === 'shorterlink');
+        const label = p.name ? `${escapeHtml(p.name)} (${escapeHtml(p.project_id)})` : escapeHtml(p.project_id);
+        html += `<option value="${escapeHtml(p.project_id)}" ${isSel ? 'selected' : ''}>${label}</option>`;
+      });
+      return html;
+    }
+
+    function openScheduleModal(editId = null) {
+      const modal = document.getElementById("scheduleModal");
+      const title = document.getElementById("modalScheduleTitle");
+      const editInput = document.getElementById("schedEditId");
+      const container = document.getElementById("actionStepsContainer");
+
+      container.innerHTML = "";
+
+      if (editId) {
+        const sched = schedulesCache.find(s => s.id === editId);
+        if (!sched) return;
+
+        title.innerText = "Chỉnh Sửa Lịch Trình";
+        editInput.value = sched.id;
+        document.getElementById("schedName").value = sched.name || "";
+        document.getElementById("schedDesc").value = sched.description || "";
+        document.getElementById("schedExecMode").value = sched.execution_mode || "sequential";
+
+        initTimePickersFromSchedule(sched.type || "cron", sched.expression || "0 8 * * *");
+
+        if (sched.actions && sched.actions.length > 0) {
+          sched.actions.forEach(act => addActionStep(act));
+        } else {
+          addActionStep();
+        }
+      } else {
+        title.innerText = "Thiết Lập Lịch Trình Mới";
+        editInput.value = "";
+        document.getElementById("schedName").value = "";
+        document.getElementById("schedDesc").value = "";
+        document.getElementById("schedExecMode").value = "sequential";
+
+        initTimePickersFromSchedule("cron", "0 8 * * *");
+        addActionStep(); // Start with 1 default action
+      }
+
+      modal.style.display = "flex";
+    }
+
+    function closeScheduleModal() {
+      document.getElementById("scheduleModal").style.display = "none";
+    }
+
+    function handleSchedTypeChange() {
+      const type = document.getElementById("schedTypeSelect").value;
+      let defaultExpr = "0 8 * * *";
+      if (type === 'interval') defaultExpr = "15m";
+      else if (type === 'once') {
+        const d = new Date(Date.now() + 3600000);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        defaultExpr = d.toISOString().slice(0, 16);
+      }
+      initTimePickersFromSchedule(type, defaultExpr);
+    }
+
+    function initTimePickersFromSchedule(type, expression) {
+      document.getElementById("schedTypeSelect").value = type;
+      document.getElementById("schedExpr").value = expression;
+
+      const uiCron = document.getElementById("uiCronConfig");
+      const uiInterval = document.getElementById("uiIntervalConfig");
+      const uiOnce = document.getElementById("uiOnceConfig");
+
+      uiCron.style.display = (type === 'cron') ? 'flex' : 'none';
+      uiInterval.style.display = (type === 'interval') ? 'flex' : 'none';
+      uiOnce.style.display = (type === 'once') ? 'flex' : 'none';
+
+      if (type === 'cron') {
+        const parts = (expression || "0 8 * * *").trim().split(/\s+/);
+        if (parts.length >= 5) {
+          const min = parseInt(parts[0], 10) || 0;
+          const hr = parseInt(parts[1], 10) || 0;
+          const dow = parts[4];
+
+          const timeStr = `${String(hr).padStart(2, '0')}:${String(min).padStart(2, '0')}`;
+          document.getElementById("cronTimeInput").value = timeStr;
+
+          if (parts[1] === '*' && parts[0] === '0') {
+            document.getElementById("cronFrequencySelect").value = 'hourly';
+          } else if (dow === '1-5') {
+            document.getElementById("cronFrequencySelect").value = 'weekdays';
+          } else if (['0', '1', '2', '3', '4', '5', '6'].includes(dow)) {
+            document.getElementById("cronFrequencySelect").value = 'weekly';
+            document.getElementById("cronDaySelect").value = dow;
+          } else {
+            document.getElementById("cronFrequencySelect").value = 'daily';
+          }
+        } else {
+          document.getElementById("cronFrequencySelect").value = 'daily';
+          document.getElementById("cronTimeInput").value = "08:00";
+        }
+        updateCronExprFromUI();
+      } else if (type === 'interval') {
+        const match = (expression || "15m").match(/^(\d+)([smh])$/i);
+        if (match) {
+          document.getElementById("intervalValueInput").value = match[1];
+          document.getElementById("intervalUnitSelect").value = match[2].toLowerCase();
+        } else {
+          document.getElementById("intervalValueInput").value = "15";
+          document.getElementById("intervalUnitSelect").value = "m";
+        }
+        updateIntervalExprFromUI();
+      } else if (type === 'once') {
+        let dtVal = "";
+        if (expression && expression.includes("T")) {
+          dtVal = expression.slice(0, 16);
+        } else {
+          const d = new Date(Date.now() + 3600000);
+          d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+          dtVal = d.toISOString().slice(0, 16);
+        }
+        document.getElementById("onceDateTimeInput").value = dtVal;
+        updateOnceExprFromUI();
+      }
+    }
+
+    function setCronTime(timeStr) {
+      document.getElementById("cronTimeInput").value = timeStr;
+      updateCronExprFromUI();
+    }
+
+    function updateCronExprFromUI() {
+      const freq = document.getElementById("cronFrequencySelect").value;
+      const timeGroup = document.getElementById("cronTimeGroup");
+      const dayGroup = document.getElementById("cronDayGroup");
+      const quickChips = document.getElementById("cronQuickChips");
+      const descEl = document.getElementById("cronHumanDesc");
+      const hiddenExpr = document.getElementById("schedExpr");
+
+      if (freq === 'hourly') {
+        timeGroup.style.display = "none";
+        dayGroup.style.display = "none";
+        quickChips.style.display = "none";
+        hiddenExpr.value = "0 * * * *";
+        descEl.innerText = "Chạy vào đầu mỗi giờ (phút thứ 00)";
+        return;
+      }
+
+      timeGroup.style.display = "block";
+      quickChips.style.display = "flex";
+
+      if (freq === 'weekly') {
+        dayGroup.style.display = "block";
+      } else {
+        dayGroup.style.display = "none";
+      }
+
+      const timeVal = document.getElementById("cronTimeInput").value || "08:00";
+      const [hourStr, minuteStr] = timeVal.split(":");
+      const minute = parseInt(minuteStr, 10) || 0;
+      const hour = parseInt(hourStr, 10) || 0;
+      const dayOfWeek = document.getElementById("cronDaySelect")?.value || "1";
+
+      const timeDisplay = `${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}`;
+
+      let expr = "";
+      let desc = "";
+
+      if (freq === 'daily') {
+        expr = `${minute} ${hour} * * *`;
+        desc = `Chạy vào lúc ${timeDisplay} mỗi ngày`;
+      } else if (freq === 'weekdays') {
+        expr = `${minute} ${hour} * * 1-5`;
+        desc = `Chạy vào lúc ${timeDisplay} từ Thứ Hai đến Thứ Sáu`;
+      } else if (freq === 'weekly') {
+        expr = `${minute} ${hour} * * ${dayOfWeek}`;
+        const dayNames = { "1": "Thứ Hai", "2": "Thứ Ba", "3": "Thứ Tư", "4": "Thứ Năm", "5": "Thứ Sáu", "6": "Thứ Bảy", "0": "Chủ Nhật" };
+        desc = `Chạy vào lúc ${timeDisplay} mỗi ${dayNames[dayOfWeek] || "tuần"}`;
+      }
+
+      hiddenExpr.value = expr;
+      descEl.innerText = desc;
+    }
+
+    function setIntervalVal(val, unit) {
+      document.getElementById("intervalValueInput").value = val;
+      document.getElementById("intervalUnitSelect").value = unit;
+      updateIntervalExprFromUI();
+    }
+
+    function updateIntervalExprFromUI() {
+      const val = parseInt(document.getElementById("intervalValueInput").value, 10) || 15;
+      const unit = document.getElementById("intervalUnitSelect").value || "m";
+      const hiddenExpr = document.getElementById("schedExpr");
+      const descEl = document.getElementById("intervalHumanDesc");
+
+      const unitNames = { "s": "giây", "m": "phút", "h": "giờ" };
+      hiddenExpr.value = `${val}${unit}`;
+      descEl.innerText = `Chạy lặp lại sau mỗi ${val} ${unitNames[unit] || unit}`;
+    }
+
+    function updateOnceExprFromUI() {
+      const dtVal = document.getElementById("onceDateTimeInput").value;
+      const hiddenExpr = document.getElementById("schedExpr");
+      const descEl = document.getElementById("onceHumanDesc");
+      hiddenExpr.value = dtVal;
+      if (dtVal && descEl) {
+        const d = new Date(dtVal);
+        if (!isNaN(d.getTime())) {
+          const timeStr = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
+          const dateStr = `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+          descEl.innerText = `Chạy 1 lần duy nhất vào lúc ${timeStr} ngày ${dateStr}`;
+        }
+      }
+    }
+
+    function addActionStep(data = null) {
+      const container = document.getElementById("actionStepsContainer");
+      const stepIndex = container.children.length + 1;
+
+      // Avoid repeated wording: do not pre-fill "Bước X: Gửi thông báo"
+      let customName = "";
+      if (data?.name && !data.name.startsWith("Bước ")) {
+        customName = data.name;
+      }
+      const delay = data?.delay_before_sec || 0;
+      const project = data?.project_id || "shorterlink";
+      const scope = data?.scope || "project_global";
+      const targetUser = (data?.targets && data.targets[0]?.user_id) || "";
+      const message = data?.content?.data?.message || "";
+
+      const card = document.createElement("div");
+      card.className = "action-step-card";
+      card.id = `actionCard_${stepIndex}`;
+
+      card.innerHTML = `
+        <div class="action-step-header">
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <span class="step-badge">Bước ${stepIndex}</span>
+            <input type="text" class="step-name-input" value="${escapeHtml(customName)}" placeholder="Tên bước (tùy chọn)..." style="background: transparent; border: 1px solid transparent; font-weight: 600; padding: 2px 6px; font-size: 0.9rem;" onfocus="this.style.border='1px solid var(--border-focus)'" onblur="this.style.border='1px solid transparent'">
+          </div>
+          <button type="button" class="btn-action-sm" style="color: var(--danger-color); padding: 2px 8px;" onclick="removeActionStep(this)" title="Xóa bước này">✕ Xóa bước</button>
+        </div>
+
+        <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+          <div class="form-group" style="flex: 1; min-width: 180px;">
+            <label>Phạm vi</label>
+            <select class="step-scope-select" onchange="handleStepScopeChange(this)">
+              <option value="user" ${scope === 'user' ? 'selected' : ''}>Cá nhân</option>
+              <option value="project_global" ${scope === 'project_global' ? 'selected' : ''}>Dự án</option>
+              <option value="system_global" ${scope === 'system_global' ? 'selected' : ''}>Hệ thống</option>
+            </select>
+          </div>
+
+          <div class="form-group step-project-group" style="flex: 1; min-width: 180px; display: ${scope === 'system_global' ? 'none' : 'block'};">
+            <label>Dự án</label>
+            <select class="step-project-select">
+              ${renderProjectOptions(project)}
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group step-user-group" style="display: ${scope === 'user' ? 'block' : 'none'};">
+          <label>Mã người dùng (User ID)</label>
+          <input type="text" class="step-user-input" value="${escapeHtml(targetUser)}" placeholder="Ví dụ: usr_9988aabb, 69dde20d3ed96333dab342da...">
+        </div>
+
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div class="form-group">
+            <label>Thời gian chờ trước bước này</label>
+            <div style="display: flex; align-items: center; gap: 6px;">
+              <input type="number" class="step-delay-input" min="0" value="${delay}" style="width: 80px;">
+              <span style="font-size: 0.8rem; color: var(--text-muted);">giây (nếu chạy lần lượt)</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>Kênh phát</label>
+            <div style="display: flex; gap: 12px; margin-top: 8px;">
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" class="step-chan-ws" checked> WebSocket
+              </label>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.85rem; cursor: pointer;">
+                <input type="checkbox" class="step-chan-email"> Email
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Nội dung tin nhắn</label>
+          <input type="text" class="step-message-input" value="${escapeHtml(message)}" placeholder="Nhập nội dung thông báo gửi tới người dùng..." required>
+          <span style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;">
+            Mẹo: Bạn có thể chèn <code>{{schedule_name}}</code> hoặc <code>{{triggered_at}}</code> vào tin nhắn.
+          </span>
+        </div>
+      `;
+
+      container.appendChild(card);
+    }
+
+    function removeActionStep(btn) {
+      const container = document.getElementById("actionStepsContainer");
+      if (container.children.length <= 1) {
+        alert("Một lịch trình bắt buộc phải có ít nhất một bước gửi thông báo.");
+        return;
+      }
+      btn.closest(".action-step-card").remove();
+      // Renumber step badges cleanly
+      Array.from(container.children).forEach((card, idx) => {
+        const badge = card.querySelector(".step-badge");
+        if (badge) badge.innerText = `Bước ${idx + 1}`;
+      });
+    }
+
+    function handleStepScopeChange(selectElem) {
+      const card = selectElem.closest(".action-step-card");
+      const userGroup = card.querySelector(".step-user-group");
+      const projectGroup = card.querySelector(".step-project-group");
+      const scope = selectElem.value;
+
+      if (scope === 'user') {
+        userGroup.style.display = "block";
+        projectGroup.style.display = "block";
+      } else if (scope === 'project_global') {
+        userGroup.style.display = "none";
+        projectGroup.style.display = "block";
+      } else if (scope === 'system_global') {
+        userGroup.style.display = "none";
+        projectGroup.style.display = "none";
+      }
+    }
+
+    function handleSaveSchedule(event) {
+      event.preventDefault();
+      const editId = document.getElementById("schedEditId").value;
+      const name = document.getElementById("schedName").value.trim();
+      const desc = document.getElementById("schedDesc").value.trim();
+      const type = document.getElementById("schedTypeSelect").value;
+      const expr = document.getElementById("schedExpr").value.trim();
+      const execMode = document.getElementById("schedExecMode").value;
+
+      if (!expr) {
+        alert("Vui lòng thiết lập thời điểm thực hiện lịch trình.");
+        return;
+      }
+
+      const container = document.getElementById("actionStepsContainer");
+      const stepCards = container.querySelectorAll(".action-step-card");
+      if (stepCards.length === 0) {
+        alert("Vui lòng thêm ít nhất một bước thông báo.");
+        return;
+      }
+
+      const actions = [];
+      stepCards.forEach((card, idx) => {
+        const actionName = card.querySelector(".step-name-input").value.trim() || `Bước ${idx + 1}`;
+        const scope = card.querySelector(".step-scope-select").value;
+        const projectSelect = card.querySelector(".step-project-select");
+        const project = scope === 'system_global' ? 'system' : (projectSelect ? projectSelect.value : 'shorterlink');
+        const delay = parseInt(card.querySelector(".step-delay-input").value, 10) || 0;
+        const msg = card.querySelector(".step-message-input").value.trim();
+        const chanWs = card.querySelector(".step-chan-ws").checked;
+        const chanEmail = card.querySelector(".step-chan-email").checked;
+
+        const channels = [];
+        if (chanWs) channels.push("websocket");
+        if (chanEmail) channels.push("email");
+        if (channels.length === 0) channels.push("websocket");
+
+        const targets = [];
+        if (scope === 'user') {
+          const userId = card.querySelector(".step-user-input").value.trim();
+          if (userId) {
+            targets.push({ user_id: userId });
+          }
+        }
+
+        actions.push({
+          action_id: `act_${idx + 1}`,
+          name: actionName,
+          delay_before_sec: delay,
+          project_id: project,
+          scope: scope,
+          channels: channels,
+          targets: targets,
+          content: {
+            type: "raw",
+            data: { message: msg }
+          }
+        });
+      });
+
+      const payload = {
+        name: name,
+        description: desc,
+        type: type,
+        expression: expr,
+        timezone: "Asia/Ho_Chi_Minh",
+        execution_mode: execMode,
+        enabled: true,
+        actions: actions
+      };
+
+      const btnSave = document.getElementById("btnSaveSchedule");
+      btnSave.disabled = true;
+      btnSave.innerText = "Đang lưu...";
+
+      const url = editId ? `${BASE_PATH}/api/v1/schedules/${editId}` : `${BASE_PATH}/api/v1/schedules`;
+      const method = editId ? "PUT" : "POST";
+
+      fetch(url, {
+        method: method,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${adminToken}`
+        },
+        body: JSON.stringify(payload)
+      })
+        .then(res => {
+          if (!res.ok) return res.text().then(t => { throw new Error(t); });
+          return res.json();
+        })
+        .then(saved => {
+          closeScheduleModal();
+          showToast({
+            project_id: "LỊCH TRÌNH",
+            scope: "system_global",
+            content: { data: { message: `Đã lưu thành công lịch trình: "${saved.name}"` } }
+          });
+          fetchSchedules();
+        })
+        .catch(err => {
+          alert("Lỗi khi lưu lịch trình: " + err.message);
+        })
+        .finally(() => {
+          btnSave.disabled = false;
+          btnSave.innerText = "Lưu Lịch Trình";
+        });
+    }
   </script>
 </body>
-</html>
 
+</html>

@@ -56,9 +56,13 @@ Trong các hệ thống phân tán và microservices, việc mỗi dự án tự
 * 🔄 **Kafka Engine 2 Tầng (Dual-Tier Kafka):**
   * **Tier 1 (Core Standard):** Lắng nghe topic chuẩn `global-notify-events` nhận trực tiếp NotificationEnvelope (dùng cho ShorterLink và service chuẩn).
   * **Tier 2 (Multi-Cluster Mapping):** Cấu hình linh hoạt qua biến môi trường để lắng nghe nhiều cụm Kafka độc lập với topic và translator riêng.
-* 🛡️ **Bảo mật Anti-IDOR & CORS:**
-  * Bóc tách danh tính người dùng từ JWT Token ký bằng thuật toán HMAC-SHA256 (`HS256`).
-  * Danh sách whitelist Origin linh hoạt hỗ trợ Wildcard (`https://*.domain.com`, `http://localhost:*`).
+* 🛡️ **Bảo mật Anti-IDOR, API Key & Scope Guard:**
+  * Bóc tách danh tính người dùng từ JWT Token ký bằng thuật toán HMAC-SHA256 (`HS256`) theo từng dự án độc lập.
+  * API Key riêng biệt cho từng tenant (ShorterLink, QuickBite) kèm cơ chế Anti-Spoofing và Scope Guard ngăn chặn vượt quyền.
+* ⏰ **Lịch Trình Tự Động (Scheduled Workers - Multi-Action):**
+  * Thiết lập kịch bản gửi thông báo tự động theo 3 kiểu: **Cron chuẩn 5 trường**, **Interval lặp lại**, hoặc **Hẹn giờ gửi 1 lần**.
+  * Trong mỗi lịch hỗ trợ chuỗi **nhiều hành động (Multi-Action)** chạy tuần tự (có thời gian chờ `delay_before_sec`) hoặc đồng loạt.
+  * Lưu trữ mỗi lịch là 1 file JSON riêng biệt tự băm tên không trùng (`data/schedules/sched_<hash>.json`), tự động khởi tạo khi chưa có.
 * 📊 **Admin Dashboard tích hợp sẵn:**
   * Truy cập trực tiếp tại `/` hoặc `/admin` mà không cần cài đặt thêm frontend riêng.
   * Theo dõi số lượng kết nối online, danh sách tenant đang active, phát thông báo thủ công và xem luồng live feed realtime.
@@ -451,7 +455,14 @@ QuickNotify tích hợp sẵn giao diện quản trị hiện đại (Glassmorph
 | `GET` | `/` hoặc `/admin` | Public / Session | Giao diện web Bảng điều khiển quản trị Admin Dashboard |
 | `POST` | `/api/v1/notify` | X-API-Key / Admin Bearer | Tiếp nhận sự kiện thông báo qua HTTP (Bảo vệ bởi Anti-Spoofing & Scope Guard) |
 | `POST` | `/api/v1/admin/login` | Public | Đăng nhập tài khoản quản trị Admin và nhận Bearer Token |
-| `GET` | `/api/v1/admin/stats` | Admin Bearer | Thống kê số lượng kết nối, danh sách tenant và cluster status |
+| `GET` | `/api/v1/stats` | Admin Bearer | Thống kê số lượng kết nối, danh sách tenant và cluster status |
+| `GET` | `/api/v1/schedules` | X-API-Key / Admin | Lấy danh sách lịch trình tự động (Lọc theo tenant hoặc xem toàn bộ) |
+| `POST` | `/api/v1/schedules` | X-API-Key / Admin | Thiết lập lịch trình mới kèm danh sách đa hành động (Multi-Action) |
+| `GET` | `/api/v1/schedules/{id}` | X-API-Key / Admin | Xem thông tin chi tiết của một lịch trình |
+| `PUT` | `/api/v1/schedules/{id}` | X-API-Key / Admin | Cập nhật cấu hình lịch trình hoặc danh sách hành động |
+| `POST` | `/api/v1/schedules/{id}/trigger` | X-API-Key / Admin | **⚡ Chạy thử ngay**: Kích hoạt phát toàn bộ hành động trong lịch tức thì |
+| `POST` | `/api/v1/schedules/{id}/toggle` | X-API-Key / Admin | Bật lại hoặc Tạm dừng (`Active` / `Paused`) một lịch trình |
+| `DELETE` | `/api/v1/schedules/{id}` | X-API-Key / Admin | Xóa bỏ file JSON lưu trữ của lịch trình |
 | `GET` | `/ws` | Client JWT | Nâng cấp kết nối HTTP Handshake thành WebSocket duplex |
 
 ---

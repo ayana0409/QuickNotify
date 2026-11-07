@@ -6,10 +6,12 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
 	"quicknotify/internal/adapters/outbound/email"
+	"quicknotify/internal/adapters/outbound/storage"
 	"quicknotify/internal/adapters/outbound/websocket"
 	"quicknotify/internal/core/ports"
 	"quicknotify/internal/core/services"
@@ -21,13 +23,15 @@ import (
 // App is the top-level application object. It owns all infrastructure objects
 // and orchestrates their lifecycle: startup → serving → graceful shutdown.
 type App struct {
-	cfg        *config.AppConfig
-	logger     *zap.Logger
-	wsHub      *websocket.Hub
-	orderCache ports.OrderCache
-	dispatcher ports.NotificationService
-	kafka      *kafkaBundle
-	httpServer *http.Server
+	cfg           *config.AppConfig
+	logger        *zap.Logger
+	wsHub         *websocket.Hub
+	orderCache    ports.OrderCache
+	dispatcher    ports.NotificationService
+	scheduleStore ports.ScheduleStore
+	schedulerSvc  *services.SchedulerService
+	kafka         *kafkaBundle
+	httpServer    *http.Server
 }
 
 // New loads configuration, wires all dependencies, and returns a ready-to-run App.
@@ -68,24 +72,34 @@ func New(envPath string) (*App, error) {
 		return nil, fmt.Errorf("init kafka consumers: %w", err)
 	}
 
-	// 7. Build the HTTP server (mux, routes, CORS, WS handler, REST notify API)
-	srv := initHTTPServer(cfg, wsHub, dispatcher, kafkaB.manager, logger)
+	// 7. Initialise JSON Schedule Store and Scheduler Worker Engine
+	scheduleStore, err := storage.NewJSONScheduleStore(filepath.Join("data", "schedules"), logger)
+	if err != nil {
+		_ = orderCache.Close()
+		return nil, fmt.Errorf("init schedule store: %w", err)
+	}
+	schedulerSvc := services.NewSchedulerService(scheduleStore, dispatcher, logger)
+
+	// 8. Build the HTTP server (mux, routes, CORS, WS handler, REST notify & schedules API)
+	srv := initHTTPServer(cfg, wsHub, dispatcher, kafkaB.manager, scheduleStore, schedulerSvc, logger)
 
 	return &App{
-		cfg:        cfg,
-		logger:     logger,
-		wsHub:      wsHub,
-		orderCache: orderCache,
-		dispatcher: dispatcher,
-		kafka:      kafkaB,
-		httpServer: srv,
+		cfg:           cfg,
+		logger:        logger,
+		wsHub:         wsHub,
+		orderCache:    orderCache,
+		dispatcher:    dispatcher,
+		scheduleStore: scheduleStore,
+		schedulerSvc:  schedulerSvc,
+		kafka:         kafkaB,
+		httpServer:    srv,
 	}, nil
 }
 
-// Run starts the HTTP server and Kafka consumers, then blocks until an OS signal
+// Run starts the HTTP server, Kafka consumers, and Scheduler Engine, then blocks until an OS signal
 // (SIGINT / SIGTERM) is received. It then performs a graceful shutdown in order:
 //
-//  1. Stop Kafka consumers (finish in-flight messages, commit offsets)
+//  1. Stop Kafka consumers and Scheduler Engine
 //  2. Shut down the HTTP server (wait up to 10 s for active requests to finish)
 //  3. Close all remaining WebSocket connections
 //  4. Release the order cache connection
@@ -97,6 +111,11 @@ func (a *App) Run() {
 	// Start all Kafka consumers in background goroutines using the bundle's context.
 	// Cancellation is triggered in shutdown() via kafkaBundle.cancelConsumers().
 	a.kafka.manager.Start(a.kafka.consumerCtx)
+
+	// Start Scheduler Worker Engine in background
+	if err := a.schedulerSvc.Start(context.Background()); err != nil {
+		a.logger.Error("Failed to start scheduler service", zap.Error(err))
+	}
 
 	// Start the HTTP server in a background goroutine so Run() stays non-blocking
 	serverAddr := fmt.Sprintf(":%d", a.cfg.Server.HTTPPort)
@@ -124,7 +143,10 @@ func (a *App) Run() {
 
 // shutdown performs an ordered, graceful shutdown of all subsystems.
 func (a *App) shutdown() {
-	// 1. Stop Kafka consumers: cancel their context first, then wait for Close()
+	// 1. Stop Scheduler Worker Engine
+	a.schedulerSvc.Stop()
+
+	// 2. Stop Kafka consumers: cancel their context first, then wait for Close()
 	a.kafka.cancelConsumers()
 	if err := a.kafka.manager.Close(); err != nil {
 		a.logger.Error("Error closing Kafka consumers", zap.Error(err))

@@ -30,3 +30,7 @@ configs/consumers.yaml
 .DS_Store
 Thumbs.db
 .agents/
+
+# Dynamic application storage (e.g. JSON schedule files)
+data/
+

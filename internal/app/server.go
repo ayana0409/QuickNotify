@@ -14,12 +14,13 @@ import (
 	"quicknotify/internal/adapters/outbound/websocket"
 	"quicknotify/internal/core/domain"
 	"quicknotify/internal/core/ports"
+	"quicknotify/internal/core/services"
 	"quicknotify/internal/pkg/config"
 
 	"go.uber.org/zap"
 )
 
-// initHTTPServer builds the HTTP mux, registers routes (health check + WebSocket),
+// initHTTPServer builds the HTTP mux, registers routes (health check + WebSocket + Schedules),
 // wraps the mux with the CORS middleware, and returns a configured *http.Server
 // ready to call ListenAndServe.
 func initHTTPServer(
@@ -27,6 +28,8 @@ func initHTTPServer(
 	wsHub *websocket.Hub,
 	dispatcher ports.NotificationService,
 	consumerManager *kafka.ConsumerManager,
+	scheduleStore ports.ScheduleStore,
+	schedulerSvc *services.SchedulerService,
 	logger *zap.Logger,
 ) *http.Server {
 	mux := http.NewServeMux()
@@ -171,13 +174,22 @@ func initHTTPServer(
 			return
 		}
 
+		configuredProjects := make([]map[string]string, 0, len(cfg.Projects.Projects))
+		for _, p := range cfg.Projects.Projects {
+			configuredProjects = append(configuredProjects, map[string]string{
+				"project_id": p.ProjectID,
+				"name":       p.Name,
+			})
+		}
+
 		w.Header().Set("Content-Type", "application/json")
 		_ = json.NewEncoder(w).Encode(map[string]interface{}{
-			"ws_connections":  wsHub.TotalConnections(),
-			"tenants":         wsHub.GetTenantOverviews(),
-			"kafka_consumers": consumerManager.TotalConsumers(),
-			"redis_enabled":   cfg.Redis.Enabled,
-			"timestamp":       time.Now().UTC().Format(time.RFC3339),
+			"ws_connections":      wsHub.TotalConnections(),
+			"tenants":             wsHub.GetTenantOverviews(),
+			"configured_projects": configuredProjects,
+			"kafka_consumers":     consumerManager.TotalConsumers(),
+			"redis_enabled":       cfg.Redis.Enabled,
+			"timestamp":           time.Now().UTC().Format(time.RFC3339),
 		})
 	})
 
@@ -213,6 +225,9 @@ func initHTTPServer(
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(data)
 	}
+
+	// --- Scheduled Notification Workers REST API ---
+	registerScheduleRoutes(mux, cfg, scheduleStore, schedulerSvc, logger)
 
 	mux.HandleFunc("/", serveAdminUI)
 	mux.HandleFunc("/admin", serveAdminUI)
@@ -356,5 +371,348 @@ func validateAdminJWT(tokenStr string, cfg *config.AppConfig) (jwt.MapClaims, bo
 		return nil, false
 	}
 	return claims, true
+}
+
+// authenticateScheduleRequest authenticates incoming requests to schedule management APIs.
+func authenticateScheduleRequest(r *http.Request, cfg *config.AppConfig) (string, domain.ProjectCredential, string, int) {
+	var token string
+	if apiKey := r.Header.Get("X-API-Key"); apiKey != "" {
+		token = strings.TrimSpace(apiKey)
+	} else if authHeader := r.Header.Get("Authorization"); authHeader != "" {
+		parts := strings.SplitN(authHeader, " ", 2)
+		if len(parts) == 2 && (strings.EqualFold(parts[0], "Bearer") || strings.EqualFold(parts[0], "ApiKey")) {
+			token = strings.TrimSpace(parts[1])
+		} else {
+			token = strings.TrimSpace(authHeader)
+		}
+	}
+
+	if token != "" {
+		// 1. Check if token is Admin JWT Session
+		if _, ok := validateAdminJWT(token, cfg); ok {
+			return "system", domain.ProjectCredential{
+				ProjectID:     "system",
+				Name:          "System Admin",
+				AllowedScopes: []string{"*"},
+				Enabled:       true,
+			}, "", http.StatusOK
+		}
+
+		// 2. Check if token matches a registered Project API Key
+		if cred, found := cfg.Projects.GetByAPIKey(token); found {
+			if !cred.Enabled {
+				return "", domain.ProjectCredential{}, fmt.Sprintf("Forbidden: API key for project '%s' is disabled", cred.ProjectID), http.StatusForbidden
+			}
+			return cred.ProjectID, cred, "", http.StatusOK
+		}
+
+		return "", domain.ProjectCredential{}, "Unauthorized: invalid API key or admin token", http.StatusUnauthorized
+	}
+
+	// 3. Fallback when zero project credentials configured (development mode)
+	if len(cfg.Projects.Projects) == 0 {
+		return "system", domain.ProjectCredential{
+			ProjectID:     "system",
+			Name:          "System Admin",
+			AllowedScopes: []string{"*"},
+			Enabled:       true,
+		}, "", http.StatusOK
+	}
+
+	return "", domain.ProjectCredential{}, "Unauthorized: missing API key or admin token (X-API-Key or Authorization header required)", http.StatusUnauthorized
+}
+
+// registerScheduleRoutes wires the REST endpoints for scheduled notification workers.
+func registerScheduleRoutes(
+	mux *http.ServeMux,
+	cfg *config.AppConfig,
+	store ports.ScheduleStore,
+	scheduler *services.SchedulerService,
+	logger *zap.Logger,
+) {
+	if store == nil {
+		return
+	}
+
+	// 1. Collection endpoint: GET (list) and POST (create)
+	mux.HandleFunc("/api/v1/schedules", func(w http.ResponseWriter, r *http.Request) {
+		ownerProjectID, cred, errMsg, status := authenticateScheduleRequest(r, cfg)
+		if status != http.StatusOK {
+			http.Error(w, errMsg, status)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			schedules, err := store.List(r.Context(), ownerProjectID)
+			if err != nil {
+				http.Error(w, fmt.Sprintf("Failed to list schedules: %v", err), http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(schedules)
+
+		case http.MethodPost:
+			var sched domain.Schedule
+			if err := json.NewDecoder(r.Body).Decode(&sched); err != nil {
+				http.Error(w, fmt.Sprintf("Invalid schedule payload: %v", err), http.StatusBadRequest)
+				return
+			}
+
+			if strings.TrimSpace(sched.Name) == "" {
+				http.Error(w, "Schedule name cannot be empty", http.StatusBadRequest)
+				return
+			}
+			if len(sched.Actions) == 0 {
+				http.Error(w, "Schedule must contain at least one notification action", http.StatusBadRequest)
+				return
+			}
+
+			// Enforce ownership: non-admin callers can only create schedules for their project
+			if ownerProjectID != "system" {
+				sched.OwnerProjectID = ownerProjectID
+			} else if sched.OwnerProjectID == "" {
+				sched.OwnerProjectID = "system"
+			}
+
+			// Validate each action for anti-spoofing and scope permissions
+			for i, act := range sched.Actions {
+				if strings.TrimSpace(act.ProjectID) == "" {
+					sched.Actions[i].ProjectID = sched.OwnerProjectID
+					act.ProjectID = sched.OwnerProjectID
+				}
+				if !cred.CanPublishFor(act.ProjectID) {
+					http.Error(w, fmt.Sprintf("Forbidden: cannot configure action for project '%s'", act.ProjectID), http.StatusForbidden)
+					return
+				}
+				if !cred.HasScope(act.Scope) {
+					http.Error(w, fmt.Sprintf("Forbidden: not authorized for scope '%s' on project '%s'", act.Scope, act.ProjectID), http.StatusForbidden)
+					return
+				}
+				if act.ActionID == "" {
+					sched.Actions[i].ActionID = fmt.Sprintf("act_%d", i+1)
+				}
+			}
+
+			if sched.ExecutionMode == "" {
+				sched.ExecutionMode = domain.ExecutionSequential
+			}
+
+			if sched.ID == "" {
+				sched.ID = fmt.Sprintf("sched_%d", time.Now().UnixNano())
+			}
+
+			// Compute NextRunAt if scheduler is active and schedule is enabled
+			if scheduler != nil && sched.Enabled {
+				next, err := scheduler.ComputeNextRun(&sched, time.Now().UTC())
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Invalid schedule timing configuration: %v", err), http.StatusBadRequest)
+					return
+				}
+				sched.NextRunAt = next
+			}
+
+			if err := store.Save(r.Context(), &sched); err != nil {
+				http.Error(w, fmt.Sprintf("Failed to save schedule: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			w.WriteHeader(http.StatusCreated)
+			_ = json.NewEncoder(w).Encode(sched)
+
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
+
+	// 2. Item endpoint: GET /api/v1/schedules/{id}, PUT, DELETE, /trigger, /toggle
+	mux.HandleFunc("/api/v1/schedules/", func(w http.ResponseWriter, r *http.Request) {
+		ownerProjectID, cred, errMsg, status := authenticateScheduleRequest(r, cfg)
+		if status != http.StatusOK {
+			http.Error(w, errMsg, status)
+			return
+		}
+
+		subPath := strings.TrimPrefix(r.URL.Path, "/api/v1/schedules/")
+		parts := strings.Split(strings.Trim(subPath, "/"), "/")
+		if len(parts) == 0 || parts[0] == "" {
+			http.Error(w, "Schedule ID required", http.StatusBadRequest)
+			return
+		}
+
+		scheduleID := parts[0]
+		action := ""
+		if len(parts) > 1 {
+			action = parts[1]
+		}
+
+		// Handle sub-action: /trigger (Run Now)
+		if action == "trigger" {
+			if r.Method != http.MethodPost {
+				http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			existing, err := store.Get(r.Context(), scheduleID)
+			if err != nil {
+				http.Error(w, "Schedule not found", http.StatusNotFound)
+				return
+			}
+			if ownerProjectID != "system" && !strings.EqualFold(existing.OwnerProjectID, ownerProjectID) {
+				http.Error(w, "Forbidden: you do not own this schedule", http.StatusForbidden)
+				return
+			}
+
+			if scheduler != nil {
+				if err := scheduler.TriggerNow(r.Context(), scheduleID); err != nil {
+					http.Error(w, fmt.Sprintf("Failed to trigger schedule: %v", err), http.StatusInternalServerError)
+					return
+				}
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":      "triggered",
+				"schedule_id": scheduleID,
+				"message":     "Lịch trình đã được kích hoạt chạy ngay lập tức",
+			})
+			return
+		}
+
+		// Handle sub-action: /toggle (Active / Pause)
+		if action == "toggle" {
+			if r.Method != http.MethodPost && r.Method != http.MethodPatch {
+				http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			existing, err := store.Get(r.Context(), scheduleID)
+			if err != nil {
+				http.Error(w, "Schedule not found", http.StatusNotFound)
+				return
+			}
+			if ownerProjectID != "system" && !strings.EqualFold(existing.OwnerProjectID, ownerProjectID) {
+				http.Error(w, "Forbidden: you do not own this schedule", http.StatusForbidden)
+				return
+			}
+
+			existing.Enabled = !existing.Enabled
+			if existing.Enabled && scheduler != nil {
+				next, _ := scheduler.ComputeNextRun(existing, time.Now().UTC())
+				existing.NextRunAt = next
+			} else {
+				existing.NextRunAt = nil
+			}
+
+			if err := store.Save(r.Context(), existing); err != nil {
+				http.Error(w, fmt.Sprintf("Failed to update toggle: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(existing)
+			return
+		}
+
+		switch r.Method {
+		case http.MethodGet:
+			existing, err := store.Get(r.Context(), scheduleID)
+			if err != nil {
+				http.Error(w, "Schedule not found", http.StatusNotFound)
+				return
+			}
+			if ownerProjectID != "system" && !strings.EqualFold(existing.OwnerProjectID, ownerProjectID) {
+				http.Error(w, "Forbidden: you do not own this schedule", http.StatusForbidden)
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(existing)
+
+		case http.MethodPut:
+			existing, err := store.Get(r.Context(), scheduleID)
+			if err != nil {
+				http.Error(w, "Schedule not found", http.StatusNotFound)
+				return
+			}
+			if ownerProjectID != "system" && !strings.EqualFold(existing.OwnerProjectID, ownerProjectID) {
+				http.Error(w, "Forbidden: you do not own this schedule", http.StatusForbidden)
+				return
+			}
+
+			var updated domain.Schedule
+			if err := json.NewDecoder(r.Body).Decode(&updated); err != nil {
+				http.Error(w, fmt.Sprintf("Invalid schedule payload: %v", err), http.StatusBadRequest)
+				return
+			}
+
+			updated.ID = scheduleID
+			updated.OwnerProjectID = existing.OwnerProjectID
+			updated.CreatedAt = existing.CreatedAt
+			updated.RunCount = existing.RunCount
+			updated.LastRunAt = existing.LastRunAt
+
+			for i, act := range updated.Actions {
+				if strings.TrimSpace(act.ProjectID) == "" {
+					updated.Actions[i].ProjectID = updated.OwnerProjectID
+					act.ProjectID = updated.OwnerProjectID
+				}
+				if !cred.CanPublishFor(act.ProjectID) {
+					http.Error(w, fmt.Sprintf("Forbidden: cannot configure action for project '%s'", act.ProjectID), http.StatusForbidden)
+					return
+				}
+				if !cred.HasScope(act.Scope) {
+					http.Error(w, fmt.Sprintf("Forbidden: not authorized for scope '%s' on project '%s'", act.Scope, act.ProjectID), http.StatusForbidden)
+					return
+				}
+				if act.ActionID == "" {
+					updated.Actions[i].ActionID = fmt.Sprintf("act_%d", i+1)
+				}
+			}
+
+			if scheduler != nil && updated.Enabled {
+				next, err := scheduler.ComputeNextRun(&updated, time.Now().UTC())
+				if err != nil {
+					http.Error(w, fmt.Sprintf("Invalid schedule configuration: %v", err), http.StatusBadRequest)
+					return
+				}
+				updated.NextRunAt = next
+			} else if !updated.Enabled {
+				updated.NextRunAt = nil
+			}
+
+			if err := store.Save(r.Context(), &updated); err != nil {
+				http.Error(w, fmt.Sprintf("Failed to update schedule: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(updated)
+
+		case http.MethodDelete:
+			existing, err := store.Get(r.Context(), scheduleID)
+			if err != nil {
+				http.Error(w, "Schedule not found", http.StatusNotFound)
+				return
+			}
+			if ownerProjectID != "system" && !strings.EqualFold(existing.OwnerProjectID, ownerProjectID) {
+				http.Error(w, "Forbidden: you do not own this schedule", http.StatusForbidden)
+				return
+			}
+
+			if err := store.Delete(r.Context(), scheduleID); err != nil {
+				http.Error(w, fmt.Sprintf("Failed to delete schedule: %v", err), http.StatusInternalServerError)
+				return
+			}
+
+			w.Header().Set("Content-Type", "application/json")
+			_ = json.NewEncoder(w).Encode(map[string]interface{}{
+				"status":  "deleted",
+				"id":      scheduleID,
+				"message": "Đã xóa lịch trình thành công",
+			})
+
+		default:
+			http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		}
+	})
 }
 
